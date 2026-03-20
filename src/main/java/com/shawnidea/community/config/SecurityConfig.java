@@ -14,6 +14,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
@@ -106,18 +107,39 @@ public class SecurityConfig implements AppConstants {
                 .hasAnyAuthority(
                         AUTHORITY_ADMIN
                 )
-                // API routes - public
+                // API routes - public (read)
                 .requestMatchers(
-                        "/api/v1/auth/**"
+                        "/api/v1/auth/**",
+                        "/api/v1/search/**"
                 )
                 .permitAll()
-                // API routes - authenticated user
-                .requestMatchers(
-                        "/api/v1/users/me/**",
+                .requestMatchers(HttpMethod.GET,
+                        "/api/v1/posts",
+                        "/api/v1/posts/**",
+                        "/api/v1/users/**",
+                        "/api/v1/follows/**"
+                )
+                .permitAll()
+                // API routes - authenticated user (write)
+                .requestMatchers(HttpMethod.POST,
                         "/api/v1/posts",
                         "/api/v1/posts/*/comments",
                         "/api/v1/likes/**",
-                        "/api/v1/follows/**",
+                        "/api/v1/follows/**"
+                )
+                .hasAnyAuthority(
+                        AUTHORITY_USER,
+                        AUTHORITY_ADMIN,
+                        AUTHORITY_MODERATOR
+                )
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/follows/**")
+                .hasAnyAuthority(
+                        AUTHORITY_USER,
+                        AUTHORITY_ADMIN,
+                        AUTHORITY_MODERATOR
+                )
+                .requestMatchers(
+                        "/api/v1/users/me/**",
                         "/api/v1/messages/**"
                 )
                 .hasAnyAuthority(
