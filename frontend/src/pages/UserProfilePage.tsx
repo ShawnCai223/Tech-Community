@@ -47,11 +47,11 @@ export default function UserProfilePage() {
             Joined {profile.createTime ? new Date(profile.createTime).toLocaleDateString() : 'N/A'}
           </div>
           <div className="profile-stats">
-            <Link to={`/app/followees/${profile.id}`} className="profile-stat">
+            <Link to={`/community/app/followees/${profile.id}`} className="profile-stat">
               <span className="profile-stat-value">{profile.followeeCount}</span>
               <span className="profile-stat-label">Following</span>
             </Link>
-            <Link to={`/app/followers/${profile.id}`} className="profile-stat">
+            <Link to={`/community/app/followers/${profile.id}`} className="profile-stat">
               <span className="profile-stat-value">{profile.followerCount}</span>
               <span className="profile-stat-label">Followers</span>
             </Link>
@@ -63,7 +63,7 @@ export default function UserProfilePage() {
         </div>
         <div className="profile-actions">
           {isMe ? (
-            <Link to="/app/settings" className="btn btn-outline btn-sm">Settings</Link>
+            <Link to="/community/app/settings" className="btn btn-outline btn-sm">Settings</Link>
           ) : currentUser ? (
             <button className={`btn btn-sm ${profile.hasFollowed ? 'btn-ghost' : 'btn-primary'}`} onClick={handleFollow}>
               {profile.hasFollowed ? 'Unfollow' : 'Follow'}

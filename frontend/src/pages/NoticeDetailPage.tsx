@@ -24,7 +24,7 @@ export default function NoticeDetailPage() {
 
   return (
     <div>
-      <Link to="/app/messages" className="page-backlink">&larr; Back to messages</Link>
+      <Link to="/community/app/messages" className="page-backlink">&larr; Back to messages</Link>
       <h2 style={{ marginBottom: 20 }}>{topicLabel} Notifications</h2>
 
       {notices.length === 0 ? (
@@ -39,7 +39,7 @@ export default function NoticeDetailPage() {
               <div className="notice-text">
                 <strong>{item.user?.username}</strong>
                 {topic === 'comment' ? ' commented on ' : topic === 'like' ? ' liked ' : ' followed you'}
-                {item.postId && <Link to={`/app/post/${item.postId}`}>view post</Link>}
+                {item.postId && <Link to={`/community/app/post/${item.postId}`}>view post</Link>}
               </div>
               <div className="notice-time">{new Date(item.notice.createTime).toLocaleString()}</div>
             </div>

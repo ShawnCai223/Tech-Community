@@ -87,17 +87,17 @@ export default function HomePage() {
         <div>
           {posts.map((item) => (
             <div key={item.post.id} className="post-card">
-              <Link to={`/app/profile/${item.user.id}`}>
+              <Link to={`/community/app/profile/${item.user.id}`}>
                 <img src={item.user.headerUrl} alt={`${item.user.username}'s avatar`} className="post-avatar" />
               </Link>
               <div className="post-card-body">
                 <div className="post-meta">
-                  <Link to={`/app/profile/${item.user.id}`} className="post-author">{item.user.username}</Link>
+                  <Link to={`/community/app/profile/${item.user.id}`} className="post-author">{item.user.username}</Link>
                   <span className="post-dot" />
                   <span>{new Date(item.post.createTime).toLocaleDateString()}</span>
                 </div>
                 <div className="post-card-title">
-                  <Link to={`/app/post/${item.post.id}`}>{item.post.title}</Link>
+                  <Link to={`/community/app/post/${item.post.id}`}>{item.post.title}</Link>
                 </div>
                 <div className="post-stats">
                   <span className="stat-pill">{item.likeCount} likes</span>

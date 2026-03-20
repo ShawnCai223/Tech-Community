@@ -17,7 +17,7 @@ export default function RegisterPage() {
       const res = await register({ username, password, email });
       if (res.code === 0) {
         setSuccess('Registration successful! Please check your email to activate your account.');
-        setTimeout(() => navigate('/app/login'), 3000);
+        setTimeout(() => navigate('/community/app/login'), 3000);
       } else {
         setError(res.message);
       }
@@ -93,7 +93,7 @@ export default function RegisterPage() {
         </form>
 
         <div className="auth-alt">
-          Already have an account? <Link to="/app/login">Sign in</Link>
+          Already have an account? <Link to="/community/app/login">Sign in</Link>
         </div>
       </div>
     </div>

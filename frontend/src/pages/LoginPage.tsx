@@ -36,7 +36,7 @@ export default function LoginPage() {
       const res = await login({ username, password, captchaCode, captchaOwner, rememberMe });
       if (res.code === 0) {
         authLogin(res.data.accessToken, res.data.refreshToken, res.data.user);
-        navigate('/app');
+        navigate('/community/app');
       } else {
         setError(res.message);
         loadCaptcha();
@@ -136,7 +136,7 @@ export default function LoginPage() {
         </form>
 
         <div className="auth-alt">
-          Don't have an account? <Link to="/app/register">Create one</Link>
+          Don't have an account? <Link to="/community/app/register">Create one</Link>
         </div>
       </div>
     </div>

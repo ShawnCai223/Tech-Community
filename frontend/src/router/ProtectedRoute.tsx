@@ -9,7 +9,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/app/login" replace />;
+    return <Navigate to="/community/app/login" replace />;
   }
 
   return <>{children}</>;

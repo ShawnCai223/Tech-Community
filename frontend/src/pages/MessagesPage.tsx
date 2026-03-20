@@ -82,7 +82,7 @@ export default function MessagesPage() {
           <div className="empty-state"><div className="empty-state-text">No messages yet.</div></div>
         ) : (
           letters.map((item: any) => (
-            <div key={item.conversation.id} className="message-item" onClick={() => navigate(`/app/messages/${item.conversation.conversationId}`)}>
+            <div key={item.conversation.id} className="message-item" onClick={() => navigate(`/community/app/messages/${item.conversation.conversationId}`)}>
               <img src={item.target.headerUrl} alt={item.target.username} className="message-avatar" />
               <div className="message-body">
                 <div className="message-title">{item.target.username}</div>
@@ -101,7 +101,7 @@ export default function MessagesPage() {
             const info = notices[topic];
             if (!info || !info.message) return null;
             return (
-              <div key={topic} className="notice-card" onClick={() => navigate(`/app/notices/${topic}`)} style={{ cursor: 'pointer' }}>
+              <div key={topic} className="notice-card" onClick={() => navigate(`/community/app/notices/${topic}`)} style={{ cursor: 'pointer' }}>
                 <div className={`notice-icon notice-icon-${topic}`}>
                   {topic === 'comment' ? '💬' : topic === 'like' ? '❤️' : '👤'}
                 </div>

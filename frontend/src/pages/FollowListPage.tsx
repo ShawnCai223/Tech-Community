@@ -38,7 +38,7 @@ export default function FollowListPage() {
 
   return (
     <div>
-      <Link to={`/app/profile/${userId}`} className="page-backlink">&larr; Back to profile</Link>
+      <Link to={`/community/app/profile/${userId}`} className="page-backlink">&larr; Back to profile</Link>
       <h2 style={{ marginBottom: 20 }}>{isFollowees ? 'Following' : 'Followers'}</h2>
 
       {users.length === 0 ? (
@@ -46,11 +46,11 @@ export default function FollowListPage() {
       ) : (
         users.map((item: any, i: number) => (
           <div key={item.user.id} className="user-card">
-            <Link to={`/app/profile/${item.user.id}`}>
+            <Link to={`/community/app/profile/${item.user.id}`}>
               <img src={item.user.headerUrl} alt={item.user.username} className="user-card-avatar" />
             </Link>
             <div className="user-card-info">
-              <Link to={`/app/profile/${item.user.id}`} className="user-card-name">{item.user.username}</Link>
+              <Link to={`/community/app/profile/${item.user.id}`} className="user-card-name">{item.user.username}</Link>
               <div className="user-card-date">
                 {item.followTime ? new Date(item.followTime).toLocaleDateString() : ''}
               </div>

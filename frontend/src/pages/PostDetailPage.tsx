@@ -34,16 +34,16 @@ export default function PostDetailPage() {
 
   return (
     <div>
-      <Link to="/app" className="page-backlink">&larr; Back to posts</Link>
+      <Link to="/community/app" className="page-backlink">&larr; Back to posts</Link>
 
       <div className="detail-header">
         <h1 className="detail-title">{post.title}</h1>
         <div className="detail-meta">
-          <Link to={`/app/profile/${user.id}`}>
+          <Link to={`/community/app/profile/${user.id}`}>
             <img src={user.headerUrl} alt={`${user.username}'s avatar`} className="detail-author-avatar" />
           </Link>
           <div>
-            <Link to={`/app/profile/${user.id}`} className="detail-author-name">{user.username}</Link>
+            <Link to={`/community/app/profile/${user.id}`} className="detail-author-name">{user.username}</Link>
             <span style={{ margin: '0 8px', color: '#94a3b8' }}>&middot;</span>
             <span>{new Date(post.createTime).toLocaleString()}</span>
           </div>

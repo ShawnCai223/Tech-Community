@@ -40,7 +40,7 @@ export default function MessageDetailPage() {
 
   return (
     <div>
-      <Link to="/app/messages" className="page-backlink">&larr; Back to messages</Link>
+      <Link to="/community/app/messages" className="page-backlink">&larr; Back to messages</Link>
 
       <div className="chat-list">
         {messages.map((item: any) => {

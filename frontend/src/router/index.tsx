@@ -14,9 +14,11 @@ import FollowListPage from '../pages/FollowListPage';
 import SearchPage from '../pages/SearchPage';
 import SettingsPage from '../pages/SettingsPage';
 
+const BASE = '/community/app';
+
 const router = createBrowserRouter([
   {
-    path: '/app',
+    path: BASE,
     element: <Layout />,
     children: [
       { index: true, element: <HomePage /> },
@@ -44,7 +46,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: '/app',
+    path: BASE,
     element: <AuthLayout />,
     children: [
       { path: 'login', element: <LoginPage /> },

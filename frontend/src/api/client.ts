@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const client = axios.create({
-  baseURL: '/api/v1',
+  baseURL: '/community/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,7 +28,7 @@ client.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const res = await axios.post('/api/v1/auth/refresh', { refreshToken });
+          const res = await axios.post('/community/api/v1/auth/refresh', { refreshToken });
           const { accessToken } = res.data.data;
           localStorage.setItem('accessToken', accessToken);
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -36,10 +36,10 @@ client.interceptors.response.use(
         } catch {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          window.location.href = '/app/login';
+          window.location.href = '/community/app/login';
         }
       } else {
-        window.location.href = '/app/login';
+        window.location.href = '/community/app/login';
       }
     }
 

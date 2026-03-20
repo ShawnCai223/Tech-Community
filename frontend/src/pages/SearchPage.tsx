@@ -58,7 +58,7 @@ export default function SearchPage() {
                   <span>{new Date(item.post.createTime).toLocaleDateString()}</span>
                 </div>
                 <div className="post-card-title">
-                  <Link to={`/app/post/${item.post.id}`}
+                  <Link to={`/community/app/post/${item.post.id}`}
                     dangerouslySetInnerHTML={{ __html: item.post.title }}
                   />
                 </div>

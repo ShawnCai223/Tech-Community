@@ -9,13 +9,13 @@ export default function Layout() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/app/login');
+    navigate('/community/app/login');
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/app/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/community/app/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
     }
   };
@@ -25,7 +25,7 @@ export default function Layout() {
       <header className="navbar">
         <div className="app-container">
           <div className="navbar-inner">
-            <Link to="/app" className="navbar-brand">
+            <Link to="/community/app" className="navbar-brand">
               <span className="brand-mark">TC</span>
               <span className="brand-text">
                 <strong>Tech Community</strong>
@@ -45,8 +45,8 @@ export default function Layout() {
             <nav className="nav-links">
               {isAuthenticated ? (
                 <>
-                  <Link to="/app/messages" className="nav-link">Messages</Link>
-                  <Link to={`/app/profile/${user?.id}`} className="nav-user">
+                  <Link to="/community/app/messages" className="nav-link">Messages</Link>
+                  <Link to={`/community/app/profile/${user?.id}`} className="nav-user">
                     <img src={user?.headerUrl} alt={`${user?.username}'s avatar`} className="nav-user-avatar" />
                     <span className="nav-username">{user?.username}</span>
                   </Link>
@@ -54,8 +54,8 @@ export default function Layout() {
                 </>
               ) : (
                 <>
-                  <Link to="/app/login" className="nav-link">Login</Link>
-                  <Link to="/app/register" className="btn btn-primary btn-sm" style={{ textDecoration: 'none' }}>Register</Link>
+                  <Link to="/community/app/login" className="nav-link">Login</Link>
+                  <Link to="/community/app/register" className="btn btn-primary btn-sm" style={{ textDecoration: 'none' }}>Register</Link>
                 </>
               )}
             </nav>
