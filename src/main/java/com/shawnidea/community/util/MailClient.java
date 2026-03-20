@@ -26,7 +26,7 @@ public class MailClient {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message);
-            helper.setFrom(from);
+            helper.setFrom(from == null ? null : from.trim());
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(content, true);
