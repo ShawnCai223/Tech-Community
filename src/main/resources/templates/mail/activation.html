@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" href="/community/img/brand-mark.svg"/>
+    <title>Tech Community - Activate Account</title>
+</head>
+<body>
+	<div>
+		<p>
+			Hello, <b th:text="${email}">xxx@xxx.com</b>!
+		</p>
+		<p>
+			Welcome to Tech Community. This is your activation email. Please click
+			<a th:href="${url}">this link</a>
+			to activate your account.
+		</p>
+	</div>
+</body>
+</html>

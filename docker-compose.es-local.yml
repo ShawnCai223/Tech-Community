@@ -1,0 +1,66 @@
+services:
+  mysql:
+    image: mysql:8.0.36
+    container_name: mysql-community
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    environment:
+      MYSQL_DATABASE: community
+      MYSQL_ROOT_PASSWORD: MQKY7CJx
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-community-data:/var/lib/mysql
+      - ./data/community-init-sql-1.5/init_schema.sql:/docker-entrypoint-initdb.d/01-init_schema.sql:ro
+      - ./data/community-init-sql-1.5/init_data.sql:/docker-entrypoint-initdb.d/02-init_data.sql:ro
+      - ./data/community-init-sql-1.5/03-localize_english.sql:/docker-entrypoint-initdb.d/03-localize_english.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-community
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-community-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: docker/elasticsearch-ik/Dockerfile
+      args:
+        ELASTICSEARCH_VERSION: 8.13.4
+    container_name: es8-community
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-community-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+    restart: unless-stopped
+
+volumes:
+  mysql-community-data:
+  redis-community-data:
+  es-community-data:
