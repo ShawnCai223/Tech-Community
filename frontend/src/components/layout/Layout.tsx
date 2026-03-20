@@ -1,13 +1,23 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useState } from 'react';
 
 export default function Layout() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = async () => {
     await logout();
     navigate('/app/login');
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/app/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
   };
 
   return (
@@ -23,25 +33,29 @@ export default function Layout() {
               </span>
             </Link>
             <div className="navbar-spacer" />
+            <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6 }}>
+              <input
+                className="form-input"
+                style={{ padding: '8px 14px', width: 200, borderRadius: 999, fontSize: 13 }}
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </form>
             <nav className="nav-links">
               {isAuthenticated ? (
                 <>
-                  <div className="nav-user">
-                    <img
-                      src={user?.headerUrl}
-                      alt={`${user?.username}'s avatar`}
-                      className="nav-user-avatar"
-                    />
+                  <Link to="/app/messages" className="nav-link">Messages</Link>
+                  <Link to={`/app/profile/${user?.id}`} className="nav-user">
+                    <img src={user?.headerUrl} alt={`${user?.username}'s avatar`} className="nav-user-avatar" />
                     <span className="nav-username">{user?.username}</span>
-                  </div>
-                  <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
-                    Logout
-                  </button>
+                  </Link>
+                  <button className="btn btn-ghost btn-sm" onClick={handleLogout}>Logout</button>
                 </>
               ) : (
                 <>
                   <Link to="/app/login" className="nav-link">Login</Link>
-                  <Link to="/app/register" className="nav-link">Register</Link>
+                  <Link to="/app/register" className="btn btn-primary btn-sm" style={{ textDecoration: 'none' }}>Register</Link>
                 </>
               )}
             </nav>
