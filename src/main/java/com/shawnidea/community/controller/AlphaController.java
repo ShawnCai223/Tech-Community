@@ -96,7 +96,7 @@ public class AlphaController {
         ModelAndView mav = new ModelAndView();
         mav.addObject("name", "Alex");
         mav.addObject("age", 30);
-        mav.setViewName("/demo/view");
+        mav.setViewName("demo/view");
         return mav;
     }
 
@@ -104,7 +104,7 @@ public class AlphaController {
     public String getSchool(Model model) {
         model.addAttribute("name", "Peking University");
         model.addAttribute("age", 80);
-        return "/demo/view";
+        return "demo/view";
     }
 
     // 响应JSON数据(异步请求)

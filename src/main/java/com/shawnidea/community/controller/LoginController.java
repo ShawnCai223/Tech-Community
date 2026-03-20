@@ -49,12 +49,12 @@ public class LoginController implements AppConstants {
 
     @RequestMapping(path = "/register", method = RequestMethod.GET)
     public String getRegisterPage() {
-        return "/site/register";
+        return "site/register";
     }
 
     @RequestMapping(path = "/login", method = RequestMethod.GET)
     public String getLoginPage() {
-        return "/site/login";
+        return "site/login";
     }
 
     @RequestMapping(path = "/register", method = RequestMethod.POST)
@@ -63,12 +63,12 @@ public class LoginController implements AppConstants {
         if (map == null || map.isEmpty()) {
             model.addAttribute("msg", "Registration successful. We have sent an activation email to your inbox.");
             model.addAttribute("target", "/index");
-            return "/site/operate-result";
+            return "site/operate-result";
         } else {
             model.addAttribute("usernameMsg", map.get("usernameMsg"));
             model.addAttribute("passwordMsg", map.get("passwordMsg"));
             model.addAttribute("emailMsg", map.get("emailMsg"));
-            return "/site/register";
+            return "site/register";
         }
     }
 
@@ -86,7 +86,7 @@ public class LoginController implements AppConstants {
             model.addAttribute("msg", "Activation failed. The activation code is invalid.");
             model.addAttribute("target", "/index");
         }
-        return "/site/operate-result";
+        return "site/operate-result";
     }
 
     @RequestMapping(path = "/kaptcha", method = RequestMethod.GET)
@@ -132,7 +132,7 @@ public class LoginController implements AppConstants {
 
         if (StringUtils.isBlank(kaptcha) || StringUtils.isBlank(code) || !kaptcha.equalsIgnoreCase(code)) {
             model.addAttribute("codeMsg", "Incorrect verification code!");
-            return "/site/login";
+            return "site/login";
         }
 
         // 检查账号,密码
@@ -147,7 +147,7 @@ public class LoginController implements AppConstants {
         } else {
             model.addAttribute("usernameMsg", map.get("usernameMsg"));
             model.addAttribute("passwordMsg", map.get("passwordMsg"));
-            return "/site/login";
+            return "site/login";
         }
     }
 

@@ -61,7 +61,7 @@ public class SearchController implements AppConstants {
         page.setPath("/search?keyword=" + normalizedKeyword);
         page.setRows(searchResult == null ? 0 : (int) searchResult.getTotalElements());
 
-        return "/site/search";
+        return "site/search";
     }
 
 }

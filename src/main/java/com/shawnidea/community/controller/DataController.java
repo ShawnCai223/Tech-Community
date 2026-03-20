@@ -33,7 +33,7 @@ public class DataController {
         if (!model.containsAttribute("dauEndDate")) {
             model.addAttribute("dauEndDate", today);
         }
-        return "/site/admin/data";
+        return "site/admin/data";
     }
 
     // 统计网站UV

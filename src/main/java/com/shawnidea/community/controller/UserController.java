@@ -42,7 +42,7 @@ public class UserController implements AppConstants {
     @LoginRequired
     @RequestMapping(path = "/setting", method = RequestMethod.GET)
     public String getSettingPage() {
-        return "/site/setting";
+        return "site/setting";
     }
 
     @Autowired
@@ -53,14 +53,14 @@ public class UserController implements AppConstants {
     public String uploadHeader(MultipartFile headerImage, Model model) {
         if (headerImage == null) {
             model.addAttribute("error", "Please choose an image first!");
-            return "/site/setting";
+            return "site/setting";
         }
 
         String fileName = headerImage.getOriginalFilename();
         String suffix = fileName.substring(fileName.lastIndexOf("."));
         if (StringUtils.isBlank(suffix)) {
             model.addAttribute("error", "Unsupported file format!");
-            return "/site/setting";
+            return "site/setting";
         }
 
         fileName = "headers/" + AppUtil.generateUUID() + suffix.toLowerCase();
@@ -108,7 +108,7 @@ public class UserController implements AppConstants {
         }
         model.addAttribute("hasFollowed", hasFollowed);
 
-        return "/site/profile";
+        return "site/profile";
     }
 
 }

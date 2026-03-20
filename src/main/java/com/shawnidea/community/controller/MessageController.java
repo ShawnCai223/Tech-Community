@@ -65,7 +65,7 @@ public class MessageController implements AppConstants {
         int noticeUnreadCount = messageService.findNoticeUnreadCount(user.getId(), null);
         model.addAttribute("noticeUnreadCount", noticeUnreadCount);
 
-        return "/site/letter";
+        return "site/letter";
     }
 
     @RequestMapping(path = "/letter/detail/{conversationId}", method = RequestMethod.GET)
@@ -97,7 +97,7 @@ public class MessageController implements AppConstants {
             messageService.readMessage(ids);
         }
 
-        return "/site/letter-detail";
+        return "site/letter-detail";
     }
 
     private User getLetterTarget(String conversationId) {
@@ -227,7 +227,7 @@ public class MessageController implements AppConstants {
         int noticeUnreadCount = messageService.findNoticeUnreadCount(user.getId(), null);
         model.addAttribute("noticeUnreadCount", noticeUnreadCount);
 
-        return "/site/notice";
+        return "site/notice";
     }
 
     @RequestMapping(path = "/notice/detail/{topic}", method = RequestMethod.GET)
@@ -266,7 +266,7 @@ public class MessageController implements AppConstants {
             messageService.readMessage(ids);
         }
 
-        return "/site/notice-detail";
+        return "site/notice-detail";
     }
 
 }
