@@ -170,15 +170,16 @@ textarea { font-family: inherit; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--brand), var(--brand-deep));
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-deep)) !important;
+  background-color: var(--brand) !important;
+  color: #ffffff !important;
   box-shadow: 0 8px 20px rgba(127, 45, 23, 0.25);
   border: none;
 }
 
 .btn-primary:hover {
   box-shadow: 0 12px 28px rgba(127, 45, 23, 0.35);
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .btn-outline {
