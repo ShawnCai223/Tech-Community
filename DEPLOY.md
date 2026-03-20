@@ -98,7 +98,7 @@ Required GitHub repository secrets:
 
 - `EC2_HOST` e.g. `54.176.102.73`
 - `EC2_USER` e.g. `ubuntu`
-- `EC2_SSH_KEY` the private key contents from your `.pem`
+- `EC2_SSH_KEY` the raw multi-line private key contents from your `.pem`
 - `EC2_PORT` usually `22`
 
 Important:
