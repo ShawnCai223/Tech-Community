@@ -26,13 +26,14 @@ public class MailClient {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message);
-            helper.setFrom(from == null ? null : from.trim());
+            String fromAddress = from == null ? null : from.trim();
+            helper.setFrom(fromAddress);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(content, true);
             mailSender.send(helper.getMimeMessage());
         } catch (MessagingException e) {
-            logger.error("发送邮件失败:" + e.getMessage());
+            logger.error("发送邮件失败: from='{}', to='{}', subject='{}'", from, to, subject, e);
         }
     }
 
