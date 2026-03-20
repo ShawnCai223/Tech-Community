@@ -80,3 +80,29 @@ If registration emails are enabled, the activation link should also point to:
 ```text
 https://shawnidea.com/community/activation/{userId}/{code}
 ```
+
+## 6. Optional: GitHub Actions auto deploy
+
+This repository includes `.github/workflows/deploy-ec2.yml`.
+
+On every push to `main`, GitHub Actions will:
+
+- build the project with Java 17
+- SSH into the EC2 server
+- run `git pull --ff-only origin main`
+- run `mvn -B clean package -DskipTests`
+- restart `tech-community`
+- verify `http://127.0.0.1:8080/community/login`
+
+Required GitHub repository secrets:
+
+- `EC2_HOST` e.g. `54.176.102.73`
+- `EC2_USER` e.g. `ubuntu`
+- `EC2_SSH_KEY` the private key contents from your `.pem`
+- `EC2_PORT` usually `22`
+
+Important:
+
+- The EC2 user must be able to run `sudo systemctl restart tech-community`
+- The server checkout must already exist at `/var/www/tech-community`
+- `.env.prod` must already be present on the server
