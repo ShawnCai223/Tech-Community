@@ -52,7 +52,13 @@ jobs:
             git pull --ff-only origin main
             mvn -B clean package -DskipTests
             sudo systemctl restart tech-community
-            sleep 10
-            sudo systemctl is-active --quiet tech-community
-            curl -fsS http://127.0.0.1:8080/community/login > /dev/null
+            for i in $(seq 1 24); do
+              if sudo systemctl is-active --quiet tech-community && curl -fsS http://127.0.0.1:8080/community/login > /dev/null; then
+                exit 0
+              fi
+              sleep 5
+            done
+            sudo systemctl status tech-community --no-pager || true
+            journalctl -u tech-community -n 120 --no-pager || true
+            exit 1
           EOF
