@@ -47,17 +47,24 @@ jobs:
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/tech_community_deploy_key -p "${{ secrets.EC2_PORT }}" "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
-            set -euo pipefail
+            set -uo pipefail
             cd /var/www/tech-community
             git pull --ff-only origin main
             mvn -B clean package -DskipTests
             sudo systemctl restart tech-community
             for i in $(seq 1 24); do
-              if sudo systemctl is-active --quiet tech-community && curl -fsS http://127.0.0.1:8080/community/login > /dev/null; then
-                exit 0
+              echo "Health check attempt ${i}/24"
+              if sudo systemctl is-active --quiet tech-community; then
+                if curl -fsS http://127.0.0.1:8080/community/login > /dev/null; then
+                  echo "Deployment health check passed."
+                  exit 0
+                fi
+              else
+                echo "tech-community is not active yet."
               fi
               sleep 5
             done
+            echo "Deployment health check failed."
             sudo systemctl status tech-community --no-pager || true
             journalctl -u tech-community -n 120 --no-pager || true
             exit 1
