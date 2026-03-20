@@ -2,11 +2,13 @@ package com.shawnidea.community.config;
 
 import com.shawnidea.community.util.AppConstants;
 import com.shawnidea.community.util.AppUtil;
+import com.shawnidea.community.util.JwtUtil;
 import com.shawnidea.community.service.UserService;
 import com.shawnidea.community.util.HostHolder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Configuration;
@@ -18,31 +20,53 @@ import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 @Configuration
 public class SecurityConfig implements AppConstants {
 
-    private final LoginTicketFilter loginTicketFilter;
+    private final CompositeAuthFilter compositeAuthFilter;
 
-    public SecurityConfig(UserService userService, HostHolder hostHolder) {
-        this.loginTicketFilter = new LoginTicketFilter(userService, hostHolder);
+    @Value("${community.cors.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
+
+    public SecurityConfig(UserService userService, HostHolder hostHolder, JwtUtil jwtUtil) {
+        this.compositeAuthFilter = new CompositeAuthFilter(userService, hostHolder, jwtUtil);
     }
 
     @Bean
-    public LoginTicketFilter loginTicketFilter() {
-        return loginTicketFilter;
+    public CompositeAuthFilter compositeAuthFilter() {
+        return compositeAuthFilter;
     }
 
     @Bean
-    public FilterRegistrationBean<LoginTicketFilter> loginTicketFilterRegistration() {
-        FilterRegistrationBean<LoginTicketFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(loginTicketFilter);
+    public FilterRegistrationBean<CompositeAuthFilter> compositeAuthFilterRegistration() {
+        FilterRegistrationBean<CompositeAuthFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(compositeAuthFilter);
         registration.setEnabled(false);
         return registration;
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
     }
 
     @Bean
@@ -50,6 +74,7 @@ public class SecurityConfig implements AppConstants {
         // 授权
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                // Thymeleaf routes - existing rules
                 .requestMatchers(
                         "/user/setting",
                         "/user/upload",
@@ -81,9 +106,44 @@ public class SecurityConfig implements AppConstants {
                 .hasAnyAuthority(
                         AUTHORITY_ADMIN
                 )
+                // API routes - public
+                .requestMatchers(
+                        "/api/v1/auth/**"
+                )
+                .permitAll()
+                // API routes - authenticated user
+                .requestMatchers(
+                        "/api/v1/users/me/**",
+                        "/api/v1/posts",
+                        "/api/v1/posts/*/comments",
+                        "/api/v1/likes/**",
+                        "/api/v1/follows/**",
+                        "/api/v1/messages/**"
+                )
+                .hasAnyAuthority(
+                        AUTHORITY_USER,
+                        AUTHORITY_ADMIN,
+                        AUTHORITY_MODERATOR
+                )
+                // API routes - moderator
+                .requestMatchers(
+                        "/api/v1/posts/*/pin",
+                        "/api/v1/posts/*/highlight"
+                )
+                .hasAnyAuthority(
+                        AUTHORITY_MODERATOR
+                )
+                // API routes - admin
+                .requestMatchers(
+                        "/api/v1/data/**"
+                )
+                .hasAnyAuthority(
+                        AUTHORITY_ADMIN
+                )
                 .anyRequest().permitAll())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .addFilterBefore(loginTicketFilter, AuthorizationFilter.class);
+                .addFilterBefore(compositeAuthFilter, AuthorizationFilter.class);
 
         // 权限不够时的处理
         http.exceptionHandling(exception -> exception
@@ -93,8 +153,9 @@ public class SecurityConfig implements AppConstants {
                     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException e) throws IOException, ServletException {
                         if (shouldReturnJson(request)) {
                             response.setContentType("application/json;charset=utf-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             PrintWriter writer = response.getWriter();
-                            writer.write(AppUtil.getJSONString(403, "You are not signed in."));
+                            writer.write(AppUtil.getJSONString(401, "You are not signed in."));
                         } else {
                             response.sendRedirect(request.getContextPath() + "/login");
                         }
@@ -106,6 +167,7 @@ public class SecurityConfig implements AppConstants {
                     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException e) throws IOException, ServletException {
                         if (shouldReturnJson(request)) {
                             response.setContentType("application/json;charset=utf-8");
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             PrintWriter writer = response.getWriter();
                             writer.write(AppUtil.getJSONString(403, "You do not have permission to access this endpoint."));
                         } else {
@@ -122,6 +184,12 @@ public class SecurityConfig implements AppConstants {
     }
 
     private boolean shouldReturnJson(HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        String contextPath = Objects.toString(request.getContextPath(), "");
+        if (requestUri != null && requestUri.startsWith(contextPath + "/api/")) {
+            return true;
+        }
+
         String xRequestedWith = request.getHeader("x-requested-with");
         if ("XMLHttpRequest".equals(xRequestedWith)) {
             return true;
@@ -132,9 +200,7 @@ public class SecurityConfig implements AppConstants {
             return true;
         }
 
-        String requestUri = request.getRequestURI();
-        return requestUri != null && requestUri.startsWith(
-                Objects.toString(request.getContextPath(), "") + "/admin/elasticsearch/");
+        return requestUri != null && requestUri.startsWith(contextPath + "/admin/elasticsearch/");
     }
 
 }

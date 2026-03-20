@@ -1,0 +1,8 @@
+.git
+.github
+frontend
+data
+scripts
+*.md
+.env*
+docker-compose*.yml

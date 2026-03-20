@@ -250,10 +250,10 @@ a:hover {
 	font-size: 20px;
 }
 .font-size-22 {
-	font-size: 20px;
+	font-size: 22px;
 }
 .font-size-24 {
-	font-size: 20px;
+	font-size: 24px;
 }
 
 .hidden {
@@ -367,81 +367,8 @@ em {
 	gap: 12px;
 }
 
-.feed-tabs .nav-link {
-	border: 1px solid transparent;
-	border-radius: 999px;
-	color: var(--muted);
-	font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-	font-weight: 700;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-}
-
-.feed-tabs .nav-link.active {
-	background: linear-gradient(135deg, var(--brand), var(--brand-deep));
-	border-color: transparent;
-	color: #fff7ef;
-}
-
 .feed-list {
 	margin-top: 10px;
-}
-
-.post-card {
-	padding: 22px;
-	margin-bottom: 18px;
-	border: 1px solid var(--line);
-	border-radius: 24px;
-	background: rgba(255, 251, 245, 0.86);
-	box-shadow: 0 12px 32px rgba(61, 44, 29, 0.05);
-}
-
-.post-avatar {
-	width: 58px;
-	height: 58px;
-	border: 3px solid rgba(255, 255, 255, 0.9);
-	box-shadow: 0 6px 16px rgba(61, 44, 29, 0.12);
-}
-
-.post-card-title a {
-	color: var(--text);
-}
-
-.post-card-title a:hover {
-	color: var(--brand-deep);
-}
-
-.post-meta {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 10px;
-	color: var(--muted);
-	font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-	font-size: 13px;
-}
-
-.post-dot {
-	width: 4px;
-	height: 4px;
-	border-radius: 999px;
-	background: rgba(75, 60, 48, 0.45);
-}
-
-.post-stats {
-	display: flex;
-	gap: 10px;
-	margin-top: 14px;
-}
-
-.stat-pill {
-	padding: 8px 12px;
-	border-radius: 999px;
-	background: var(--accent-soft);
-	color: var(--accent);
-	font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-	font-size: 12px;
-	font-weight: 700;
 }
 
 .auth-page .container {

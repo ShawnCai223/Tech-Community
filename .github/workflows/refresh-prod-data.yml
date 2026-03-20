@@ -1,0 +1,60 @@
+name: Refresh Production Data
+
+on:
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  refresh-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Prepare SSH key
+        env:
+          EC2_SSH_KEY_B64: ${{ secrets.EC2_SSH_KEY_B64 }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s' "$EC2_SSH_KEY_B64" | base64 --decode > ~/.ssh/tech_community_deploy_key
+          chmod 600 ~/.ssh/tech_community_deploy_key
+          ssh-keygen -y -f ~/.ssh/tech_community_deploy_key > /dev/null
+
+      - name: Trust EC2 host key
+        run: |
+          set -euo pipefail
+          ssh-keyscan -p "${{ secrets.EC2_PORT }}" -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Apply localized data SQL on EC2
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/tech_community_deploy_key -p "${{ secrets.EC2_PORT }}" "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
+            set -euo pipefail
+            cd /var/www/tech-community
+            set -a
+            source .env.prod
+            set +a
+
+            db_host=$(printf '%s' "$COMMUNITY_DATASOURCE_URL" | sed -E 's#jdbc:mysql://([^:/?]+)(:([0-9]+))?/([^?]+).*$#\1#')
+            db_port=$(printf '%s' "$COMMUNITY_DATASOURCE_URL" | sed -nE 's#jdbc:mysql://[^:/?]+:([0-9]+)/[^?]+.*#\1#p')
+            db_name=$(printf '%s' "$COMMUNITY_DATASOURCE_URL" | sed -E 's#jdbc:mysql://[^/]+/([^?]+).*$#\1#')
+
+            if [ -z "$db_port" ]; then
+              db_port=3306
+            fi
+
+            mysql -h"$db_host" -P"$db_port" -u"$COMMUNITY_DATASOURCE_USERNAME" -p"$COMMUNITY_DATASOURCE_PASSWORD" \
+              "$db_name" < data/community-init-sql-1.5/03-localize_english.sql
+
+            sudo systemctl restart tech-community
+            if ! curl -fsS http://127.0.0.1:8080/community/login > /dev/null; then
+              echo "Health check failed after data refresh."
+              sudo systemctl status tech-community --no-pager || true
+              journalctl -u tech-community -n 120 --no-pager || true
+              exit 1
+            fi
+          EOF
