@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getPosts, createPost } from '../api/posts';
 import { useAuth } from '../contexts/AuthContext';
+import Pagination from '../components/common/Pagination';
 
 export default function HomePage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -100,8 +101,18 @@ export default function HomePage() {
                   <Link to={`/community/app/post/${item.post.id}`}>{item.post.title}</Link>
                 </div>
                 <div className="post-stats">
-                  <span className="stat-pill">{item.likeCount} likes</span>
-                  <span className="stat-pill stat-pill-blue">{item.post.commentCount} comments</span>
+                  <span className="stat-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: 0.7 }}>
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    {item.likeCount}
+                  </span>
+                  <span className="stat-pill stat-pill-blue">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: 0.7 }}>
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    {item.post.commentCount}
+                  </span>
                 </div>
               </div>
             </div>
@@ -109,13 +120,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button className="btn btn-sm btn-ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</button>
-          <span className="pagination-info">Page {page + 1} / {totalPages}</span>
-          <button className="btn btn-sm btn-ghost" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>Next</button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }
