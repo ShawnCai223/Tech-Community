@@ -12,11 +12,18 @@ interface MarkdownEditorProps {
 export default function MarkdownEditor({ value, onChange, placeholder, rows, minHeight }: MarkdownEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isInternalChange = useRef(false);
   const [uploading, setUploading] = useState(false);
   const [uploadMode, setUploadMode] = useState<'image' | 'video'>('image');
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Skip sync when the change originated from user editing inside the editor,
+    // so we don't reset innerHTML and destroy cursor/selection/formatting state.
+    if (isInternalChange.current) {
+      isInternalChange.current = false;
+      return;
+    }
     const editor = editorRef.current;
     if (!editor) {
       return;
@@ -44,6 +51,7 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows, min
     }
     const nextValue = normalizeEditorHtml(editor.innerHTML);
     if (nextValue !== value) {
+      isInternalChange.current = true;
       onChange(nextValue);
     }
   };

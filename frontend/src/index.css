@@ -995,9 +995,21 @@ textarea { font-family: inherit; }
 .rich-editor-content p:last-child {
   margin-bottom: 0;
 }
+.rich-editor-content b,
+.rich-editor-content strong { font-weight: 700; }
+.rich-editor-content i,
+.rich-editor-content em { font-style: italic; }
 .rich-editor-content a {
   color: var(--accent);
   text-decoration: underline;
+}
+.rich-editor-content img {
+  max-width: 100%; height: auto; border-radius: 12px;
+  margin: 8px 0; display: block;
+}
+.rich-editor-content video {
+  max-width: 100%; border-radius: 12px;
+  margin: 8px 0; display: block;
 }
 .rich-editor-content pre {
   margin: 12px 0;
