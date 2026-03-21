@@ -58,7 +58,8 @@ jobs:
             for i in $(seq 1 24); do
               echo "Health check attempt ${i}/24"
               if sudo systemctl is-active --quiet tech-community; then
-                if curl -fsS -o /dev/null -w '' http://127.0.0.1:8080/community/app/index.html; then
+                if curl -fsS -o /dev/null http://127.0.0.1:8080/community/app/index.html \
+                  && curl -fsS "http://127.0.0.1:8080/community/api/v1/posts?page=0&limit=1" | grep -q '"code":0'; then
                   echo "Deployment health check passed."
                   exit 0
                 fi

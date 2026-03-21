@@ -92,7 +92,8 @@ On every push to `main`, GitHub Actions will:
 - run `git pull --ff-only origin main`
 - run `mvn -B clean package -DskipTests`
 - restart `tech-community`
-- verify `http://127.0.0.1:8080/community/login`
+- verify both `http://127.0.0.1:8080/community/app/index.html`
+- and `http://127.0.0.1:8080/community/api/v1/posts?page=0&limit=1`
 
 Required GitHub repository secrets:
 

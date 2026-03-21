@@ -51,7 +51,8 @@ jobs:
               "$db_name" < data/community-init-sql-1.5/03-localize_english.sql
 
             sudo systemctl restart tech-community
-            if ! curl -fsS http://127.0.0.1:8080/community/login > /dev/null; then
+            if ! curl -fsS -o /dev/null http://127.0.0.1:8080/community/app/index.html \
+              || ! curl -fsS "http://127.0.0.1:8080/community/api/v1/posts?page=0&limit=1" | grep -q '"code":0'; then
               echo "Health check failed after data refresh."
               sudo systemctl status tech-community --no-pager || true
               journalctl -u tech-community -n 120 --no-pager || true
