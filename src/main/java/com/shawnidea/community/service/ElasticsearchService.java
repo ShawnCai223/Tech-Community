@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -40,7 +41,11 @@ public class ElasticsearchService {
     }
 
     public long countDiscussPosts() {
-        return discussRepository.count();
+        try {
+            return discussRepository.count();
+        } catch (NoSuchIndexException exception) {
+            return 0;
+        }
     }
 
     public Page<DiscussPost> searchDiscussPost(String keyword, int current, int limit) {
