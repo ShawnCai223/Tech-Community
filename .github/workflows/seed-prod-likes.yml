@@ -32,14 +32,13 @@ jobs:
       - name: Upload and run seed script
         run: |
           set -euo pipefail
-          SSH_OPTS="-i ~/.ssh/tech_community_deploy_key -p ${{ secrets.EC2_PORT }}"
-          SSH_TARGET="${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}"
+          KEY=~/.ssh/tech_community_deploy_key
+          PORT="${{ secrets.EC2_PORT }}"
+          TARGET="${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}"
 
-          # Upload the script directly from this checkout
-          scp $SSH_OPTS scripts/prod-seed-likes.sh "${SSH_TARGET}:/tmp/prod-seed-likes.sh"
+          scp -i "$KEY" -P "$PORT" scripts/prod-seed-likes.sh "${TARGET}:/tmp/prod-seed-likes.sh"
 
-          # Run it on the server
-          ssh $SSH_OPTS "$SSH_TARGET" <<'EOF'
+          ssh -i "$KEY" -p "$PORT" "$TARGET" <<'EOF'
             set -euo pipefail
             cd /var/www/tech-community
             set -a
