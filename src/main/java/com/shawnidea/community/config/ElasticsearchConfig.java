@@ -8,6 +8,7 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfigurat
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Arrays;
 
 @Configuration
@@ -25,6 +26,8 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
                 .toArray(String[]::new);
         return ClientConfiguration.builder()
                 .connectedTo(endpoints)
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withSocketTimeout(Duration.ofSeconds(30))
                 .build();
     }
 
