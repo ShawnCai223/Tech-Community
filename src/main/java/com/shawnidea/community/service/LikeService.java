@@ -10,7 +10,9 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class LikeService {
@@ -118,6 +120,13 @@ public class LikeService {
             return;
         }
         redisTemplate.opsForSet().add(RedisKeyUtil.getEntityLikeKey(entityType, entityId), userIds.toArray());
+    }
+
+    public Map<Integer, Long> findEntityLikeCounts(int entityType, List<Integer> entityIds) {
+        if (entityIds == null || entityIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return likeRecordRepository.countByEntityIds(entityType, entityIds);
     }
 
 }

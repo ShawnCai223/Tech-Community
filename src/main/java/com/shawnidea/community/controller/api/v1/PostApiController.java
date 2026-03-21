@@ -10,6 +10,7 @@ import com.shawnidea.community.event.EventProducer;
 import com.shawnidea.community.service.CommentService;
 import com.shawnidea.community.service.DiscussPostService;
 import com.shawnidea.community.service.LikeService;
+import com.shawnidea.community.service.UserBatchLookupService;
 import com.shawnidea.community.service.UserService;
 import com.shawnidea.community.util.AppConstants;
 import com.shawnidea.community.util.HostHolder;
@@ -19,6 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/posts")
@@ -29,6 +31,9 @@ public class PostApiController implements AppConstants {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserBatchLookupService userBatchLookupService;
 
     @Autowired
     private CommentService commentService;
@@ -54,12 +59,17 @@ public class PostApiController implements AppConstants {
         List<DiscussPost> posts = discussPostService.findDiscussPosts(0, offset, limit, orderMode);
         int totalRows = discussPostService.findDiscussPostRows(0);
 
+        List<Integer> postIds = posts.stream().map(DiscussPost::getId).collect(Collectors.toList());
+        List<Integer> userIds = posts.stream().map(DiscussPost::getUserId).distinct().collect(Collectors.toList());
+        Map<Integer, User> usersById = userBatchLookupService.findUsersByIds(userIds);
+        Map<Integer, Long> likeCounts = likeService.findEntityLikeCounts(ENTITY_TYPE_POST, postIds);
+
         List<Map<String, Object>> list = new ArrayList<>();
         for (DiscussPost post : posts) {
             Map<String, Object> vo = new HashMap<>();
             vo.put("post", post);
-            vo.put("user", userService.findUserById(post.getUserId()));
-            vo.put("likeCount", likeService.findEntityLikeCount(ENTITY_TYPE_POST, post.getId()));
+            vo.put("user", usersById.get(post.getUserId()));
+            vo.put("likeCount", likeCounts.getOrDefault(post.getId(), 0L));
             list.add(vo);
         }
 
