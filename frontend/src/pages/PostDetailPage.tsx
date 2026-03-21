@@ -89,7 +89,11 @@ export default function PostDetailPage() {
       <Link to="/community/app" className="page-backlink">&larr; Back to posts</Link>
 
       <div className="detail-header">
-        <h1 className="detail-title">{post.title}</h1>
+        <h1 className="detail-title">
+          {post.title}
+          {post.type === 1 && <span className="badge badge-pinned">Pinned</span>}
+          {post.status === 1 && <span className="badge badge-featured">Featured</span>}
+        </h1>
         <div className="detail-meta">
           <Link to={`/community/app/profile/${user.id}`}>
             <img src={user.headerUrl} alt={`${user.username}'s avatar`} className="detail-author-avatar" />

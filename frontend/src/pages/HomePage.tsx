@@ -99,6 +99,8 @@ export default function HomePage() {
                 </div>
                 <div className="post-card-title">
                   <Link to={`/community/app/post/${item.post.id}`}>{item.post.title}</Link>
+                  {item.post.type === 1 && <span className="badge badge-pinned">Pinned</span>}
+                  {item.post.status === 1 && <span className="badge badge-featured">Featured</span>}
                 </div>
                 <div className="post-stats">
                   <span className="stat-pill">

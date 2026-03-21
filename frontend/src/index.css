@@ -453,6 +453,10 @@ textarea { font-family: inherit; }
 .post-card-title a { color: var(--text); text-decoration: none; }
 .post-card-title a:hover { color: var(--accent); }
 
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; vertical-align: middle; margin-left: 8px; }
+.badge-pinned { background: var(--accent); color: #fff; }
+.badge-featured { background: #ef4444; color: #fff; }
+
 .post-stats { display: flex; gap: 10px; flex-wrap: wrap; }
 
 .stat-pill {
