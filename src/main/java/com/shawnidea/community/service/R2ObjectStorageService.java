@@ -72,6 +72,17 @@ public class R2ObjectStorageService implements ObjectStorageService {
     }
 
     @Override
+    public String uploadShareStream(String key, InputStream inputStream, long contentLength, String contentType) {
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(shareBucket)
+                .key(key)
+                .contentType(defaultContentType(contentType))
+                .build();
+        s3Client.putObject(request, RequestBody.fromInputStream(inputStream, contentLength));
+        return buildPublicUrl(sharePublicBaseUrl, key);
+    }
+
+    @Override
     public String getShareUrl(String key) {
         return buildPublicUrl(sharePublicBaseUrl, key);
     }

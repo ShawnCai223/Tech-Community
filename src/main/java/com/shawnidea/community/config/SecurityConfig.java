@@ -125,7 +125,8 @@ public class SecurityConfig implements AppConstants {
                         "/api/v1/posts",
                         "/api/v1/posts/*/comments",
                         "/api/v1/likes/**",
-                        "/api/v1/follows/**"
+                        "/api/v1/follows/**",
+                        "/api/v1/upload"
                 )
                 .hasAnyAuthority(
                         AUTHORITY_USER,

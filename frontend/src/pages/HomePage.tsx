@@ -4,6 +4,7 @@ import { getPosts, createPost } from '../api/posts';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/common/Pagination';
 import PostBadges from '../components/PostBadges';
+import MarkdownEditor from '../components/MarkdownEditor';
 
 export default function HomePage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -63,7 +64,7 @@ export default function HomePage() {
           </div>
           <div className="form-group">
             <label className="form-label">Content</label>
-            <textarea className="form-textarea" placeholder="Share your thoughts..." value={content} onChange={e => setContent(e.target.value)} />
+            <MarkdownEditor value={content} onChange={setContent} placeholder="Share your thoughts... (Markdown supported)" />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-primary btn-sm" onClick={handleCreate}>Publish</button>

@@ -5,6 +5,8 @@ import { toggleLike } from '../api/likes';
 import { addComment } from '../api/comments';
 import { useAuth } from '../contexts/AuthContext';
 import PostBadges from '../components/PostBadges';
+import MarkdownContent from '../components/MarkdownContent';
+import MarkdownEditor from '../components/MarkdownEditor';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -125,18 +127,17 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      <div className="detail-content">{post.content}</div>
+      <MarkdownContent content={post.content} className="detail-content" />
 
       {/* Comment Form */}
       {isAuthenticated && (
         <div style={{ marginBottom: 24 }}>
           <div className="form-group">
             <label className="form-label">Add a Comment</label>
-            <textarea
-              className="form-textarea"
-              placeholder="Share your thoughts..."
+            <MarkdownEditor
               value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
+              onChange={setCommentText}
+              placeholder="Share your thoughts... (Markdown supported)"
               rows={3}
             />
           </div>
@@ -183,18 +184,17 @@ export default function PostDetailPage() {
               </button>
             )}
           </div>
-          <div className="comment-body">{c.comment.content}</div>
+          <MarkdownContent content={c.comment.content} className="comment-body" />
 
           {/* Reply form for this comment */}
           {replyingTo?.commentId === c.comment.id && (
             <div style={{ marginLeft: 38, marginTop: 10 }}>
               <div className="form-group" style={{ marginBottom: 8 }}>
-                <textarea
-                  className="form-textarea"
-                  style={{ minHeight: 60, fontSize: 13 }}
-                  placeholder={`Reply to ${replyingTo?.username ?? ''}...`}
+                <MarkdownEditor
                   value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
+                  onChange={setReplyText}
+                  placeholder={`Reply to ${replyingTo?.username ?? ''}... (Markdown supported)`}
+                  minHeight={60}
                 />
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -216,7 +216,7 @@ export default function PostDetailPage() {
                   <div>
                     <strong>{r.user.username}</strong>
                     {r.target && <span> replied to <strong>{r.target.username}</strong></span>}
-                    : {r.reply.content}
+                    : <MarkdownContent content={r.reply.content} className="reply-content-inline" />
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
                     {isAuthenticated && (

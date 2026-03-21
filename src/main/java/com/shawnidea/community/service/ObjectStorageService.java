@@ -8,5 +8,7 @@ public interface ObjectStorageService {
 
     void uploadShare(String localPath, String key, String contentType);
 
+    String uploadShareStream(String key, InputStream inputStream, long contentLength, String contentType);
+
     String getShareUrl(String key);
 }

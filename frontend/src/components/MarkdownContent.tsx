@@ -1,0 +1,42 @@
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import type { Components } from 'react-markdown';
+
+const components: Components = {
+  // Render video tags from raw HTML in markdown
+  p({ children, ...props }) {
+    // Check if the only child is an img — if so, don't wrap in <p>
+    const childArray = Array.isArray(children) ? children : [children];
+    if (childArray.length === 1 && typeof childArray[0] === 'object' && childArray[0] !== null && 'type' in childArray[0] && childArray[0].type === 'img') {
+      return <>{children}</>;
+    }
+    return <p {...props}>{children}</p>;
+  },
+  img({ src, alt, ...props }) {
+    // Check if it's actually a video URL
+    if (src && /\.(mp4|webm|mov)(\?|$)/i.test(src)) {
+      return <video src={src} controls className="markdown-video" />;
+    }
+    return <img src={src} alt={alt || ''} className="markdown-image" loading="lazy" {...props} />;
+  },
+};
+
+interface MarkdownContentProps {
+  content: string;
+  className?: string;
+}
+
+export default function MarkdownContent({ content, className }: MarkdownContentProps) {
+  return (
+    <div className={`markdown-body ${className || ''}`}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+        components={components}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
