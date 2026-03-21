@@ -452,8 +452,9 @@ textarea { font-family: inherit; }
 .post-card-title { font-size: 20px; line-height: 1.35; font-weight: 600; margin-bottom: 8px; }
 .post-card-title a { color: var(--text); text-decoration: none; }
 .post-card-title a:hover { color: var(--accent); }
+.post-title-row { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
-.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; vertical-align: middle; margin-left: 8px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; vertical-align: middle; }
 .badge-pinned { background: var(--accent); color: #fff; }
 .badge-featured { background: #ef4444; color: #fff; }
 

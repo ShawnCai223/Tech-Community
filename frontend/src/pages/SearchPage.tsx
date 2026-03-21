@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { searchPosts } from '../api/search';
+import PostBadges from '../components/PostBadges';
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,9 +59,13 @@ export default function SearchPage() {
                   <span>{new Date(item.post.createTime).toLocaleDateString()}</span>
                 </div>
                 <div className="post-card-title">
-                  <Link to={`/community/app/post/${item.post.id}`}
-                    dangerouslySetInnerHTML={{ __html: item.post.title }}
-                  />
+                  <div className="post-title-row">
+                    <Link
+                      to={`/community/app/post/${item.post.id}`}
+                      dangerouslySetInnerHTML={{ __html: item.post.title }}
+                    />
+                    <PostBadges type={item.post.type} status={item.post.status} />
+                  </div>
                 </div>
                 <div className="post-stats">
                   <span className="stat-pill">{item.likeCount} likes</span>

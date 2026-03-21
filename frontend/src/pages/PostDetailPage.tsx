@@ -4,6 +4,7 @@ import { getPostDetail } from '../api/posts';
 import { toggleLike } from '../api/likes';
 import { addComment } from '../api/comments';
 import { useAuth } from '../contexts/AuthContext';
+import PostBadges from '../components/PostBadges';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,9 +91,10 @@ export default function PostDetailPage() {
 
       <div className="detail-header">
         <h1 className="detail-title">
-          {post.title}
-          {post.type === 1 && <span className="badge badge-pinned">Pinned</span>}
-          {post.status === 1 && <span className="badge badge-featured">Featured</span>}
+          <span className="post-title-row">
+            <span>{post.title}</span>
+            <PostBadges type={post.type} status={post.status} />
+          </span>
         </h1>
         <div className="detail-meta">
           <Link to={`/community/app/profile/${user.id}`}>

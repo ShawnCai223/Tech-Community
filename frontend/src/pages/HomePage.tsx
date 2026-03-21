@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getPosts, createPost } from '../api/posts';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/common/Pagination';
+import PostBadges from '../components/PostBadges';
 
 export default function HomePage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -98,9 +99,10 @@ export default function HomePage() {
                   <span>{new Date(item.post.createTime).toLocaleDateString()}</span>
                 </div>
                 <div className="post-card-title">
-                  <Link to={`/community/app/post/${item.post.id}`}>{item.post.title}</Link>
-                  {item.post.type === 1 && <span className="badge badge-pinned">Pinned</span>}
-                  {item.post.status === 1 && <span className="badge badge-featured">Featured</span>}
+                  <div className="post-title-row">
+                    <Link to={`/community/app/post/${item.post.id}`}>{item.post.title}</Link>
+                    <PostBadges type={item.post.type} status={item.post.status} />
+                  </div>
                 </div>
                 <div className="post-stats">
                   <span className="stat-pill">
