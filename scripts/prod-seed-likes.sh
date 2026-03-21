@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # Seeds realistic like data into production Redis.
-# Run on the EC2 server: cd /var/www/tech-community && bash scripts/prod-seed-likes.sh
-set -euo pipefail
+# Expects COMMUNITY_DATASOURCE_URL etc. to be set in the environment
+# (source .env.prod before running, or let the workflow handle it).
+set -eo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Try to load .env.prod if not already sourced
+if [ -z "${COMMUNITY_DATASOURCE_URL:-}" ]; then
+  for candidate in /var/www/tech-community/.env.prod .env.prod; do
+    if [ -f "$candidate" ]; then
+      set -a
+      source "$candidate"
+      set +a
+      break
+    fi
+  done
+fi
 
-# Load production environment
-if [ -f "$ROOT_DIR/.env.prod" ]; then
-  set -a
-  source "$ROOT_DIR/.env.prod"
-  set +a
+if [ -z "${COMMUNITY_DATASOURCE_URL:-}" ]; then
+  echo "ERROR: COMMUNITY_DATASOURCE_URL is not set. Source .env.prod first." >&2
+  exit 1
 fi
 
 # Parse DB connection from JDBC URL

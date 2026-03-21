@@ -29,12 +29,22 @@ jobs:
           set -euo pipefail
           ssh-keyscan -p "${{ secrets.EC2_PORT }}" -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Seed likes on EC2
+      - name: Upload and run seed script
         run: |
           set -euo pipefail
-          ssh -i ~/.ssh/tech_community_deploy_key -p "${{ secrets.EC2_PORT }}" "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
+          SSH_OPTS="-i ~/.ssh/tech_community_deploy_key -p ${{ secrets.EC2_PORT }}"
+          SSH_TARGET="${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}"
+
+          # Upload the script directly from this checkout
+          scp $SSH_OPTS scripts/prod-seed-likes.sh "${SSH_TARGET}:/tmp/prod-seed-likes.sh"
+
+          # Run it on the server
+          ssh $SSH_OPTS "$SSH_TARGET" <<'EOF'
             set -euo pipefail
             cd /var/www/tech-community
-            git pull --ff-only origin main
-            bash scripts/prod-seed-likes.sh
+            set -a
+            source .env.prod
+            set +a
+            bash /tmp/prod-seed-likes.sh
+            rm -f /tmp/prod-seed-likes.sh
           EOF
