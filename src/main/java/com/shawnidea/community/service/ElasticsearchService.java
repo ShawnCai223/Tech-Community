@@ -39,6 +39,10 @@ public class ElasticsearchService {
         discussRepository.deleteById(id);
     }
 
+    public long countDiscussPosts() {
+        return discussRepository.count();
+    }
+
     public Page<DiscussPost> searchDiscussPost(String keyword, int current, int limit) {
         PageRequest pageable = PageRequest.of(current, limit);
         if (!StringUtils.hasText(keyword)) {
