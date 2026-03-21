@@ -21,7 +21,8 @@ db_pass="$COMMUNITY_DATASOURCE_PASSWORD"
 
 redis_host="${COMMUNITY_REDIS_HOST:-localhost}"
 redis_port="${COMMUNITY_REDIS_PORT:-6379}"
-redis_db="${COMMUNITY_REDIS_DB:-0}"
+redis_db="${COMMUNITY_REDIS_DATABASE:-0}"
+redis_pass="${COMMUNITY_REDIS_PASSWORD:-}"
 
 if [ -z "$db_port" ]; then
   db_port=3306
@@ -32,7 +33,11 @@ mysql_query() {
 }
 
 redis_cmd() {
-  redis-cli -h "$redis_host" -p "$redis_port" -n "$redis_db" "$@"
+  if [ -n "$redis_pass" ]; then
+    redis-cli -h "$redis_host" -p "$redis_port" -n "$redis_db" -a "$redis_pass" --no-auth-warning "$@"
+  else
+    redis-cli -h "$redis_host" -p "$redis_port" -n "$redis_db" "$@"
+  fi
 }
 
 echo "Fetching active users..."
@@ -135,6 +140,10 @@ while IFS=$'\t' read -r comment_id author_id entity_type entity_id target_id; do
 done < <(mysql_query "SELECT id, user_id, entity_type, entity_id, target_id FROM comment WHERE status = 0 ORDER BY id;" | tr -d '\r')
 
 echo "Writing ${post_count} post + ${comment_count} comment like entries to Redis..."
-redis_cmd -h "$redis_host" -p "$redis_port" -n "$redis_db" <"$redis_batch_file" >/dev/null
+if [ -n "$redis_pass" ]; then
+  redis-cli -h "$redis_host" -p "$redis_port" -n "$redis_db" -a "$redis_pass" --no-auth-warning <"$redis_batch_file" >/dev/null
+else
+  redis-cli -h "$redis_host" -p "$redis_port" -n "$redis_db" <"$redis_batch_file" >/dev/null
+fi
 
 echo "Done! Seeded likes for $post_count posts and $comment_count comments."
