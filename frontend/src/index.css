@@ -979,6 +979,29 @@ textarea { font-family: inherit; }
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+.rich-editor-content {
+  width: 100%;
+  min-height: 140px;
+  outline: none;
+  white-space: pre-wrap;
+}
+.rich-editor-content:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+}
+.rich-editor-content p {
+  margin: 0 0 12px;
+}
+.rich-editor-content p:last-child {
+  margin-bottom: 0;
+}
+.rich-editor-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.rich-editor-content pre {
+  margin: 12px 0;
+}
 .toolbar-btn {
   padding: 4px 10px; font-size: 13px; font-weight: 600;
   background: none; border: 1px solid transparent; border-radius: 6px;
@@ -992,6 +1015,8 @@ textarea { font-family: inherit; }
 .markdown-body { word-wrap: break-word; overflow-wrap: break-word; }
 .markdown-body p { margin: 0 0 12px; }
 .markdown-body p:last-child { margin-bottom: 0; }
+.markdown-body video,
+.markdown-body img { display: block; }
 .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin: 16px 0 8px; font-weight: 700; }
 .markdown-body h1 { font-size: 1.5em; }
 .markdown-body h2 { font-size: 1.3em; }

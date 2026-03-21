@@ -4,6 +4,8 @@ import com.shawnidea.community.dto.ApiResponse;
 import com.shawnidea.community.service.ObjectStorageService;
 import com.shawnidea.community.util.AppUtil;
 import com.shawnidea.community.util.HostHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +17,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/upload")
 public class UploadApiController {
+    private static final Logger logger = LoggerFactory.getLogger(UploadApiController.class);
 
     private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of(".png", ".jpg", ".jpeg", ".gif", ".webp");
     private static final Set<String> ALLOWED_VIDEO_EXTENSIONS = Set.of(".mp4", ".webm", ".mov");
@@ -36,12 +39,7 @@ public class UploadApiController {
             return ApiResponse.error(400, "No file selected.");
         }
 
-        String filename = file.getOriginalFilename();
-        if (filename == null || !filename.contains(".")) {
-            return ApiResponse.error(400, "Invalid file format.");
-        }
-
-        String suffix = filename.substring(filename.lastIndexOf(".")).toLowerCase();
+        String suffix = resolveSuffix(file);
         boolean isImage = ALLOWED_IMAGE_EXTENSIONS.contains(suffix);
         boolean isVideo = ALLOWED_VIDEO_EXTENSIONS.contains(suffix);
 
@@ -69,7 +67,37 @@ public class UploadApiController {
             String type = isImage ? "image" : "video";
             return ApiResponse.ok(Map.of("url", url, "type", type));
         } catch (IOException e) {
+            logger.warn("Upload failed due to IO error.", e);
+            return ApiResponse.error(500, "Upload failed.");
+        } catch (Exception e) {
+            logger.error("Upload failed unexpectedly.", e);
             return ApiResponse.error(500, "Upload failed.");
         }
+    }
+
+    private String resolveSuffix(MultipartFile file) {
+        String filename = file.getOriginalFilename();
+        if (filename != null) {
+            int index = filename.lastIndexOf(".");
+            if (index >= 0) {
+                return filename.substring(index).toLowerCase();
+            }
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null) {
+            return "";
+        }
+
+        return switch (contentType.toLowerCase()) {
+            case "image/png" -> ".png";
+            case "image/jpeg" -> ".jpg";
+            case "image/gif" -> ".gif";
+            case "image/webp" -> ".webp";
+            case "video/mp4" -> ".mp4";
+            case "video/webm" -> ".webm";
+            case "video/quicktime" -> ".mov";
+            default -> "";
+        };
     }
 }

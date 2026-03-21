@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { uploadFile } from '../api/upload';
 
 interface MarkdownEditorProps {
@@ -10,77 +10,62 @@ interface MarkdownEditorProps {
 }
 
 export default function MarkdownEditor({ value, onChange, placeholder, rows, minHeight }: MarkdownEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMode, setUploadMode] = useState<'image' | 'video'>('image');
+  const [error, setError] = useState('');
 
-  const updateSelection = (
-    builder: (selectedText: string) => {
-      text: string;
-      selectionStartOffset?: number;
-      selectionEndOffset?: number;
-    }
-  ) => {
-    const textarea = textareaRef.current;
-    if (!textarea) {
-      const next = builder('');
-      onChange(value + next.text);
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) {
       return;
     }
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = value.substring(start, end);
-    const next = builder(selectedText);
-    const newValue = value.substring(0, start) + next.text + value.substring(end);
-    onChange(newValue);
+    if (editor.innerHTML !== value) {
+      editor.innerHTML = value;
+    }
+  }, [value]);
 
-    requestAnimationFrame(() => {
-      const selectionStartOffset = next.selectionStartOffset ?? next.text.length;
-      const selectionEndOffset = next.selectionEndOffset ?? selectionStartOffset;
-      textarea.selectionStart = start + selectionStartOffset;
-      textarea.selectionEnd = start + selectionEndOffset;
-      textarea.focus();
-    });
+  const focusEditor = () => {
+    editorRef.current?.focus();
   };
 
-  const wrapSelection = (prefix: string, suffix: string, fallbackText: string) => {
-    updateSelection((selectedText) => {
-      const content = selectedText || fallbackText;
-      const text = `${prefix}${content}${suffix}`;
-      const selectionStartOffset = prefix.length;
-      const selectionEndOffset = prefix.length + content.length;
-      return { text, selectionStartOffset, selectionEndOffset };
-    });
+  const exec = (command: string, valueArg?: string) => {
+    focusEditor();
+    document.execCommand(command, false, valueArg);
+    syncValue();
   };
 
-  const insertCodeBlock = () => {
-    updateSelection((selectedText) => {
-      const content = selectedText || 'code';
-      const text = `\`\`\`\n${content}\n\`\`\``;
-      return {
-        text,
-        selectionStartOffset: 4,
-        selectionEndOffset: 4 + content.length,
-      };
-    });
+  const syncValue = () => {
+    const editor = editorRef.current;
+    if (!editor) {
+      return;
+    }
+    const nextValue = normalizeEditorHtml(editor.innerHTML);
+    if (nextValue !== value) {
+      onChange(nextValue);
+    }
   };
 
   const openUploadPicker = (mode: 'image' | 'video') => {
     setUploadMode(mode);
+    setError('');
     requestAnimationFrame(() => fileInputRef.current?.click());
   };
 
   const handleFileUpload = async (file: File) => {
     setUploading(true);
+    setError('');
     try {
       const result = await uploadFile(file);
-      updateSelection(() => ({
-        text: `![${file.name}](${result.url})\n`,
-      }));
-    } catch {
-      alert('File upload failed.');
+      const altText = escapeHtml(file.name || result.type);
+      const mediaHtml = result.type === 'video'
+        ? `<video src="${result.url}" controls class="markdown-video"></video><p><br></p>`
+        : `<img src="${result.url}" alt="${altText}" class="markdown-image" /><p><br></p>`;
+      exec('insertHTML', mediaHtml);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'File upload failed.');
     } finally {
       setUploading(false);
     }
@@ -117,13 +102,26 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows, min
     e.preventDefault();
   };
 
+  const insertLink = () => {
+    focusEditor();
+    const url = window.prompt('请输入网站地址', 'https://');
+    if (!url) {
+      return;
+    }
+    exec('createLink', url);
+  };
+
+  const insertCodeBlock = () => {
+    exec('insertHTML', '<pre><code>code</code></pre><p><br></p>');
+  };
+
   return (
     <div className="markdown-editor">
       <div className="markdown-editor-toolbar">
-        <button type="button" className="toolbar-btn" title="Bold" onClick={() => wrapSelection('**', '**', 'bold text')}>B</button>
-        <button type="button" className="toolbar-btn" title="Italic" onClick={() => wrapSelection('*', '*', 'italic text')} style={{ fontStyle: 'italic' }}>I</button>
+        <button type="button" className="toolbar-btn" title="Bold" onClick={() => exec('bold')}>B</button>
+        <button type="button" className="toolbar-btn" title="Italic" onClick={() => exec('italic')} style={{ fontStyle: 'italic' }}>I</button>
         <button type="button" className="toolbar-btn" title="Code block" onClick={insertCodeBlock}>&lt;/&gt;</button>
-        <button type="button" className="toolbar-btn" title="Link" onClick={() => wrapSelection('[', '](https://example.com)', 'link text')}>Link</button>
+        <button type="button" className="toolbar-btn" title="Link" onClick={insertLink}>Link</button>
         <button
           type="button"
           className="toolbar-btn"
@@ -144,18 +142,23 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows, min
         </button>
         <span className="toolbar-hint">Select text to format it. Paste or drag images and videos to upload.</span>
       </div>
-      <textarea
-        ref={textareaRef}
-        className="form-textarea"
-        style={minHeight ? { minHeight } : undefined}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <div
+        ref={editorRef}
+        className="form-textarea rich-editor-content markdown-body"
+        style={minHeight ? { minHeight } : rows ? { minHeight: `${Math.max(rows, 3) * 24}px` } : undefined}
+        data-placeholder={placeholder}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={syncValue}
         onPaste={handlePaste}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        rows={rows}
+        onBlur={syncValue}
+        role="textbox"
+        aria-multiline="true"
+        spellCheck
       />
+      {error ? <div className="form-error" style={{ marginTop: 8 }}>{error}</div> : null}
       <input
         ref={fileInputRef}
         type="file"
@@ -167,4 +170,22 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows, min
       />
     </div>
   );
+}
+
+function normalizeEditorHtml(html: string) {
+  return html
+    .replace(/<(div|p)><br><\/(div|p)>/gi, '<p><br></p>')
+    .replace(/<div>/gi, '<p>')
+    .replace(/<\/div>/gi, '</p>')
+    .replace(/&nbsp;/gi, ' ')
+    .trim();
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

@@ -36,6 +36,15 @@ function normalizeMarkdownContent(content: string) {
 }
 
 export default function MarkdownContent({ content, className }: MarkdownContentProps) {
+  if (looksLikeHtml(content)) {
+    return (
+      <div
+        className={`markdown-body ${className || ''}`}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+      />
+    );
+  }
+
   return (
     <div className={`markdown-body ${className || ''}`}>
       <ReactMarkdown
@@ -47,4 +56,81 @@ export default function MarkdownContent({ content, className }: MarkdownContentP
       </ReactMarkdown>
     </div>
   );
+}
+
+function looksLikeHtml(content: string) {
+  return /<\/?[a-z][\s\S]*>/i.test(content);
+}
+
+function sanitizeHtml(html: string) {
+  if (typeof window === 'undefined') {
+    return html;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const allowedTags = new Set(['A', 'B', 'BLOCKQUOTE', 'BR', 'CODE', 'EM', 'I', 'IMG', 'LI', 'OL', 'P', 'PRE', 'STRONG', 'UL', 'VIDEO']);
+
+  const walk = (node: Node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as HTMLElement;
+      if (!allowedTags.has(element.tagName)) {
+        const fragment = document.createDocumentFragment();
+        while (element.firstChild) {
+          fragment.appendChild(element.firstChild);
+        }
+        element.replaceWith(fragment);
+        return;
+      }
+
+      const attrs = [...element.attributes];
+      for (const attr of attrs) {
+        const name = attr.name.toLowerCase();
+        const value = attr.value.trim();
+        const allowedAttr = isAllowedAttribute(element.tagName, name);
+        const safeUrl = name === 'href' || name === 'src' ? isSafeUrl(value) : true;
+        if (!allowedAttr || !safeUrl) {
+          element.removeAttribute(attr.name);
+        }
+      }
+
+      if (element.tagName === 'A') {
+        element.setAttribute('target', '_blank');
+        element.setAttribute('rel', 'noopener noreferrer nofollow');
+      }
+      if (element.tagName === 'VIDEO') {
+        element.setAttribute('controls', '');
+        element.classList.add('markdown-video');
+      }
+      if (element.tagName === 'IMG') {
+        element.classList.add('markdown-image');
+        element.setAttribute('loading', 'lazy');
+      }
+    }
+
+    const children = [...node.childNodes];
+    for (const child of children) {
+      walk(child);
+    }
+  };
+
+  walk(doc.body);
+  return doc.body.innerHTML;
+}
+
+function isAllowedAttribute(tagName: string, attrName: string) {
+  if (tagName === 'A') {
+    return ['href', 'target', 'rel'].includes(attrName);
+  }
+  if (tagName === 'IMG') {
+    return ['src', 'alt', 'class', 'loading'].includes(attrName);
+  }
+  if (tagName === 'VIDEO') {
+    return ['src', 'controls', 'class'].includes(attrName);
+  }
+  return false;
+}
+
+function isSafeUrl(value: string) {
+  return /^(https?:|\/)/i.test(value);
 }
