@@ -35,11 +35,9 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows, min
     setUploading(true);
     try {
       const result = await uploadFile(file);
-      if (result.type === 'image') {
-        insertAtCursor(`![${file.name}](${result.url})\n`);
-      } else {
-        insertAtCursor(`<video src="${result.url}" controls></video>\n`);
-      }
+      // Use standard markdown image syntax for both images and videos.
+      // The renderer upgrades video URLs to <video> elements automatically.
+      insertAtCursor(`![${file.name}](${result.url})\n`);
     } catch {
       alert('File upload failed.');
     } finally {
@@ -94,7 +92,7 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows, min
         >
           {uploading ? 'Uploading...' : 'Upload'}
         </button>
-        <span className="toolbar-hint">Markdown supported. Paste or drag to upload images.</span>
+        <span className="toolbar-hint">Markdown supported. Paste or drag images and videos to upload.</span>
       </div>
       <textarea
         ref={textareaRef}
