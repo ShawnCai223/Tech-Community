@@ -38,14 +38,34 @@ jobs:
 
           scp -i "$KEY" -P "$PORT" scripts/prod-seed-likes.sh "${TARGET}:/tmp/prod-seed-likes.sh"
 
-          ssh -i "$KEY" -p "$PORT" "$TARGET" <<'EOF'
+          ssh -i "$KEY" -p "$PORT" "$TARGET" <<'OUTER'
             set -eo pipefail
             cd /var/www/tech-community
-            set -a
-            . .env.prod
-            set +a
-            echo "COMMUNITY_DATASOURCE_URL is: ${COMMUNITY_DATASOURCE_URL:-(empty)}"
-            echo "COMMUNITY_REDIS_HOST is: ${COMMUNITY_REDIS_HOST:-(empty)}"
+
+            # Source all env files that might exist
+            for f in .env.prod .env; do
+              [ -f "$f" ] && { set -a; . "./$f"; set +a; }
+            done
+
+            # Also try to read from systemd service environment
+            if [ -z "${COMMUNITY_DATASOURCE_URL:-}" ]; then
+              svc_env=$(sudo systemctl show tech-community --property=Environment 2>/dev/null || true)
+              if echo "$svc_env" | grep -q 'COMMUNITY_DATASOURCE_URL'; then
+                eval "$(echo "$svc_env" | sed 's/^Environment=//' | tr ' ' '\n' | grep 'COMMUNITY_')"
+              fi
+            fi
+
+            # Also try EnvironmentFile
+            if [ -z "${COMMUNITY_DATASOURCE_URL:-}" ]; then
+              env_file=$(sudo systemctl show tech-community --property=EnvironmentFiles 2>/dev/null | sed 's/^EnvironmentFiles=//' | tr ' ' '\n' | head -1)
+              if [ -n "$env_file" ] && [ -f "$env_file" ]; then
+                set -a; . "$env_file"; set +a
+              fi
+            fi
+
+            echo "=== Debug: COMMUNITY_DATASOURCE_URL=${COMMUNITY_DATASOURCE_URL:-(empty)}"
+            echo "=== Debug: COMMUNITY_REDIS_HOST=${COMMUNITY_REDIS_HOST:-(empty)}"
+
             bash /tmp/prod-seed-likes.sh
             rm -f /tmp/prod-seed-likes.sh
-          EOF
+          OUTER
