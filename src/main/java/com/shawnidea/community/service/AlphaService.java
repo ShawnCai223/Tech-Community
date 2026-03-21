@@ -9,6 +9,7 @@ import com.shawnidea.community.util.AppUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,6 +44,12 @@ public class AlphaService {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Value("${community.path.domain}")
+    private String domain;
+
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
+
     public AlphaService() {
 //        System.out.println("实例化AlphaService");
     }
@@ -72,7 +79,7 @@ public class AlphaService {
         user.setSalt(AppUtil.generateUUID().substring(0, 5));
         user.setPassword(AppUtil.md5("123" + user.getSalt()));
         user.setEmail("alpha@qq.com");
-        user.setHeaderUrl("http://localhost:8080/community/img/avatar-default.svg");
+        user.setHeaderUrl(defaultHeaderUrl());
         user.setCreateTime(new Date());
         userMapper.insertUser(user);
 
@@ -102,7 +109,7 @@ public class AlphaService {
                 user.setSalt(AppUtil.generateUUID().substring(0, 5));
                 user.setPassword(AppUtil.md5("123" + user.getSalt()));
                 user.setEmail("beta@qq.com");
-                user.setHeaderUrl("http://localhost:8080/community/img/avatar-default.svg");
+                user.setHeaderUrl(defaultHeaderUrl());
                 user.setCreateTime(new Date());
                 userMapper.insertUser(user);
 
@@ -130,6 +137,10 @@ public class AlphaService {
     /*@Scheduled(initialDelay = 10000, fixedRate = 1000)*/
     public void execute2() {
         logger.debug("execute2");
+    }
+
+    private String defaultHeaderUrl() {
+        return domain + contextPath + "/img/avatar-default.svg";
     }
 
 }

@@ -223,10 +223,16 @@ public class UserService implements AppConstants {
         if (user == null) {
             return null;
         }
-        if (StringUtils.isBlank(user.getHeaderUrl()) || isLegacyRemoteHeader(user.getHeaderUrl())) {
+        if (StringUtils.isBlank(user.getHeaderUrl())
+                || isLegacyRemoteHeader(user.getHeaderUrl())
+                || isLegacyDefaultHeaderUrl(user.getHeaderUrl())) {
             user.setHeaderUrl(defaultHeaderUrl());
         }
         return user;
+    }
+
+    private boolean isLegacyDefaultHeaderUrl(String headerUrl) {
+        return headerUrl.matches("https?://(?:localhost|127\\.0\\.0\\.1)(?::\\d+)?/community/img/avatar-default\\.svg");
     }
 
     private boolean isLegacyRemoteHeader(String headerUrl) {

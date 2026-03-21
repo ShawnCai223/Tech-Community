@@ -18,6 +18,8 @@ import java.util.List;
 @ManualExplorationTest
 public class MapperTests {
 
+    private static final String DEFAULT_HEADER_URL = "https://shawnidea.com/community/img/avatar-default.svg";
+
     @Autowired
     private UserMapper userMapper;
 
@@ -49,7 +51,7 @@ public class MapperTests {
         user.setPassword("123456");
         user.setSalt("abc");
         user.setEmail("test@qq.com");
-        user.setHeaderUrl("http://localhost:8080/community/img/avatar-default.svg");
+        user.setHeaderUrl(DEFAULT_HEADER_URL);
         user.setCreateTime(new Date());
 
         int rows = userMapper.insertUser(user);
@@ -62,7 +64,7 @@ public class MapperTests {
         int rows = userMapper.updateStatus(150, 1);
         System.out.println(rows);
 
-        rows = userMapper.updateHeader(150, "http://localhost:8080/community/img/avatar-default.svg");
+        rows = userMapper.updateHeader(150, DEFAULT_HEADER_URL);
         System.out.println(rows);
 
         rows = userMapper.updatePassword(150, "hello");
