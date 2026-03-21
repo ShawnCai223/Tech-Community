@@ -39,11 +39,13 @@ jobs:
           scp -i "$KEY" -P "$PORT" scripts/prod-seed-likes.sh "${TARGET}:/tmp/prod-seed-likes.sh"
 
           ssh -i "$KEY" -p "$PORT" "$TARGET" <<'EOF'
-            set -euo pipefail
+            set -eo pipefail
             cd /var/www/tech-community
             set -a
-            source .env.prod
+            . .env.prod
             set +a
+            echo "COMMUNITY_DATASOURCE_URL is: ${COMMUNITY_DATASOURCE_URL:-(empty)}"
+            echo "COMMUNITY_REDIS_HOST is: ${COMMUNITY_REDIS_HOST:-(empty)}"
             bash /tmp/prod-seed-likes.sh
             rm -f /tmp/prod-seed-likes.sh
           EOF
