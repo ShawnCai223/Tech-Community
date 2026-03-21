@@ -1,5 +1,6 @@
 package com.shawnidea.community.service;
 
+import com.shawnidea.community.repository.LikeRecordRepository;
 import com.shawnidea.community.util.AppConstants;
 import com.shawnidea.community.util.RedisKeyUtil;
 import org.slf4j.Logger;
@@ -30,6 +31,9 @@ public class LikeBootstrapService implements AppConstants {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private LikeRecordRepository likeRecordRepository;
+
     @Value("${community.likes.bootstrap.enabled:false}")
     private boolean enabled;
 
@@ -53,6 +57,11 @@ public class LikeBootstrapService implements AppConstants {
         int existingEntityKeyCount = sizeOfKeys("like:entity:*");
         if (existingEntityKeyCount >= minEntityKeys) {
             logger.info("Skip like bootstrap because Redis already has {} like entity keys.", existingEntityKeyCount);
+            return;
+        }
+
+        if (likeRecordRepository.countAll() > 0) {
+            rebuildRedisFromDatabase(existingEntityKeyCount);
             return;
         }
 
@@ -163,6 +172,37 @@ public class LikeBootstrapService implements AppConstants {
     private int sizeOfKeys(String pattern) {
         Set<String> keys = redisTemplate.keys(pattern);
         return keys == null ? 0 : keys.size();
+    }
+
+    private void rebuildRedisFromDatabase(int existingEntityKeyCount) {
+        clearLikeKeys();
+
+        Map<Integer, Integer> userLikeCounts = new HashMap<>();
+        for (LikeRecordRepository.LikeRecordRow record : likeRecordRepository.findAll()) {
+            redisTemplate.opsForSet().add(
+                    RedisKeyUtil.getEntityLikeKey(record.entityType(), record.entityId()),
+                    record.userId()
+            );
+            userLikeCounts.merge(record.entityUserId(), 1, Integer::sum);
+        }
+
+        rebuildUserLikeCounts(userLikeCounts);
+        logger.info(
+                "Rebuilt Redis likes from {} durable records because only {} entity keys existed.",
+                likeRecordRepository.countAll(),
+                existingEntityKeyCount
+        );
+    }
+
+    private void clearLikeKeys() {
+        Set<String> entityKeys = redisTemplate.keys("like:entity:*");
+        if (entityKeys != null && !entityKeys.isEmpty()) {
+            redisTemplate.delete(entityKeys);
+        }
+        Set<String> userKeys = redisTemplate.keys("like:user:*");
+        if (userKeys != null && !userKeys.isEmpty()) {
+            redisTemplate.delete(userKeys);
+        }
     }
 
     List<Integer> loadActiveUserIds() {

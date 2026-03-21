@@ -1,5 +1,6 @@
 package com.shawnidea.community.service;
 
+import com.shawnidea.community.repository.LikeRecordRepository;
 import com.shawnidea.community.util.RedisKeyUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,15 +30,18 @@ public class LikeBootstrapServiceTests {
         RedisTemplate<String, Object> redisTemplate = mock(RedisTemplate.class);
         SetOperations<String, Object> setOperations = mock(SetOperations.class);
         ValueOperations<String, Object> valueOperations = mock(ValueOperations.class);
+        LikeRecordRepository likeRecordRepository = mock(LikeRecordRepository.class);
 
         when(redisTemplate.opsForSet()).thenReturn(setOperations);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(redisTemplate.keys("like:entity:*")).thenReturn(Set.of());
         when(redisTemplate.keys("like:user:*")).thenReturn(Set.of("like:user:149"));
         when(setOperations.members(any())).thenReturn(null);
+        when(likeRecordRepository.countAll()).thenReturn(0L);
 
         LikeBootstrapService service = spy(new LikeBootstrapService());
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        ReflectionTestUtils.setField(service, "likeRecordRepository", likeRecordRepository);
         ReflectionTestUtils.setField(service, "enabled", true);
         ReflectionTestUtils.setField(service, "minEntityKeys", 20);
 
@@ -65,10 +69,12 @@ public class LikeBootstrapServiceTests {
     @Test
     void shouldSkipBootstrapWhenEnoughLikeKeysAlreadyExist() {
         RedisTemplate<String, Object> redisTemplate = mock(RedisTemplate.class);
+        LikeRecordRepository likeRecordRepository = mock(LikeRecordRepository.class);
         when(redisTemplate.keys("like:entity:*")).thenReturn(Set.of("a", "b", "c"));
 
         LikeBootstrapService service = spy(new LikeBootstrapService());
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        ReflectionTestUtils.setField(service, "likeRecordRepository", likeRecordRepository);
         ReflectionTestUtils.setField(service, "enabled", true);
         ReflectionTestUtils.setField(service, "minEntityKeys", 3);
 

@@ -78,6 +78,27 @@ CREATE TABLE `login_ticket` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `like_record`
+--
+
+DROP TABLE IF EXISTS `like_record`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `like_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `entity_type` int(11) NOT NULL,
+  `entity_id` int(11) NOT NULL,
+  `entity_user_id` int(11) NOT NULL,
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_like_user_entity` (`user_id`,`entity_type`,`entity_id`),
+  KEY `idx_like_entity` (`entity_type`,`entity_id`),
+  KEY `idx_like_entity_user` (`entity_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `message`
 --
 
