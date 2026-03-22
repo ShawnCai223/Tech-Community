@@ -23,6 +23,7 @@ import java.util.Date;
 public class PostScoreRefreshJob implements Job, AppConstants {
 
     private static final Logger logger = LoggerFactory.getLogger(PostScoreRefreshJob.class);
+    private static final double RECENCY_SCALE_DAYS = 45.0;
 
     @Autowired
     private RedisTemplate redisTemplate;
@@ -81,9 +82,10 @@ public class PostScoreRefreshJob implements Job, AppConstants {
 
         // 计算权重
         double w = (wonderful ? 75 : 0) + commentCount * 10 + likeCount * 2;
-        // 分数 = 帖子权重 + 距离天数
+        // 分数 = 帖子权重 + 折算后的时间衰减.
+        // 时间项如果过重, 新发但零互动的帖子会长期压过已有互动的内容.
         double score = Math.log10(Math.max(w, 1))
-                + (post.getCreateTime().getTime() - epoch.getTime()) / (1000 * 3600 * 24);
+                + (post.getCreateTime().getTime() - epoch.getTime()) / (1000.0 * 3600 * 24 * RECENCY_SCALE_DAYS);
         // 更新帖子分数
         discussPostService.updateScore(postId, score);
 
