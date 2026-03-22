@@ -115,8 +115,10 @@ public class DiscussPostService {
         // 过滤敏感词
         post.setTitle(sensitiveFilter.filter(post.getTitle()));
         post.setContent(sensitiveFilter.filter(post.getContent()));
-
-        return discussPostMapper.insertDiscussPost(post);
+        int rows = discussPostMapper.insertDiscussPost(post);
+        invalidatePostListCache();
+        invalidatePostRowsCache();
+        return rows;
     }
 
     public DiscussPost findDiscussPostById(int id) {
@@ -124,19 +126,40 @@ public class DiscussPostService {
     }
 
     public int updateCommentCount(int id, int commentCount) {
-        return discussPostMapper.updateCommentCount(id, commentCount);
+        int rows = discussPostMapper.updateCommentCount(id, commentCount);
+        invalidatePostListCache();
+        return rows;
     }
 
     public int updateType(int id, int type) {
-        return discussPostMapper.updateType(id, type);
+        int rows = discussPostMapper.updateType(id, type);
+        invalidatePostListCache();
+        return rows;
     }
 
     public int updateStatus(int id, int status) {
-        return discussPostMapper.updateStatus(id, status);
+        int rows = discussPostMapper.updateStatus(id, status);
+        invalidatePostListCache();
+        invalidatePostRowsCache();
+        return rows;
     }
 
     public int updateScore(int id, double score) {
-        return discussPostMapper.updateScore(id, score);
+        int rows = discussPostMapper.updateScore(id, score);
+        invalidatePostListCache();
+        return rows;
+    }
+
+    private void invalidatePostListCache() {
+        if (postListCache != null) {
+            postListCache.invalidateAll();
+        }
+    }
+
+    private void invalidatePostRowsCache() {
+        if (postRowsCache != null) {
+            postRowsCache.invalidateAll();
+        }
     }
 
 }
