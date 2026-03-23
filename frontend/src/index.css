@@ -51,6 +51,7 @@ textarea { font-family: inherit; }
 
 /* ─── Layout ─── */
 .app-container { width: 1040px; max-width: 100%; margin: 0 auto; padding: 0 16px; }
+.app-main { padding: 20px 0 40px; }
 
 .main-panel {
   background: var(--panel);
@@ -975,11 +976,12 @@ textarea { font-family: inherit; }
 @media (max-width: 768px) {
   .main-panel { padding: 16px; border-radius: 16px; }
   .navbar { padding: 12px 0; }
+  .navbar-inner { gap: 8px; }
   .navbar-brand { padding: 8px 12px; gap: 10px; }
   .brand-mark { width: 34px; height: 34px; font-size: 12px; border-radius: 10px; }
-  .brand-text strong { font-size: 13px; }
-  .brand-text small { font-size: 10px; }
-  .navbar-search { width: 140px; font-size: 12px; }
+  .brand-text { display: none; }
+  .navbar-spacer { display: none; }
+  .navbar-search { flex: 1; width: auto; min-width: 0; font-size: 12px; }
   .nav-link { padding: 8px 10px; font-size: 12px; }
   .nav-username { display: none; }
   .detail-title { font-size: 20px; }
@@ -1000,7 +1002,8 @@ textarea { font-family: inherit; }
   .chat-compose { flex-direction: column; }
   .chat-compose .form-textarea { min-height: 60px; }
   .settings-grid { gap: 16px; }
-  .post-avatar { width: 44px; height: 44px; }
+  .post-card { flex-direction: row; gap: 12px; }
+  .post-avatar { width: 36px; height: 36px; border-width: 2px; }
   .notice-card { gap: 10px; }
   .empty-state { padding: 32px 16px; }
   .pagination { flex-wrap: wrap; }
@@ -1014,21 +1017,22 @@ textarea { font-family: inherit; }
 @media (max-width: 480px) {
   .app-container { padding: 0 10px; }
   .main-panel { padding: 14px; border-radius: 14px; box-shadow: var(--shadow-sm); }
-  .navbar-inner { gap: 8px; }
-  .navbar-brand { padding: 6px 10px; gap: 8px; }
+  .navbar-inner { gap: 6px; }
+  .navbar-brand { padding: 6px 8px; gap: 6px; }
   .brand-mark { width: 30px; height: 30px; font-size: 11px; border-radius: 8px; }
-  .brand-text small { display: none; }
-  .brand-text strong { font-size: 12px; }
-  .navbar-search { width: 100px; padding: 6px 10px !important; font-size: 12px; }
+  .navbar-search { padding: 6px 10px !important; font-size: 12px; }
   .nav-links { gap: 2px; }
   .nav-link { padding: 6px 8px; font-size: 11px; }
   .btn-sm { padding: 6px 10px; font-size: 11px; }
+  .page-jump { display: none; }
   .detail-title { font-size: 18px; }
   .detail-section-title { font-size: 16px; }
-  .post-card { padding: 14px 0; gap: 10px; }
+  .app-main { padding: 12px 0 24px; }
+  .post-card { flex-direction: row; padding: 14px 0; gap: 10px; }
   .post-card-title { font-size: 16px; }
   .post-card-body { font-size: 13px; }
-  .post-meta { font-size: 11px; }
+  .post-meta { font-size: 11px; gap: 6px; margin-bottom: 4px; }
+  .post-avatar { width: 32px; height: 32px; border-width: 2px; }
   .profile-hero { padding: 14px; gap: 12px; border-radius: 16px; }
   .profile-avatar { width: 52px; height: 52px; border-width: 3px; }
   .profile-name { font-size: 18px; }

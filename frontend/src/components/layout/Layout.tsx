@@ -62,7 +62,7 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <main style={{ padding: '20px 0', paddingBottom: '80px' }}>
+      <main className="app-main">
         <div className="app-container">
           <div className="main-panel">
             <Outlet />
