@@ -35,8 +35,8 @@ export default function Layout() {
             <div className="navbar-spacer" />
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6 }}>
               <input
-                className="form-input"
-                style={{ padding: '8px 14px', width: 200, borderRadius: 999, fontSize: 13 }}
+                className="form-input navbar-search"
+                style={{ padding: '8px 14px', borderRadius: 999, fontSize: 13 }}
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}

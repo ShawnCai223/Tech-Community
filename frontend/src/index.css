@@ -111,6 +111,7 @@ textarea { font-family: inherit; }
 .brand-text small { margin-top: 3px; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
 
 .navbar-spacer { flex: 1; }
+.navbar-search { width: 200px; }
 
 .nav-links { display: flex; align-items: center; gap: 4px; }
 
@@ -948,6 +949,8 @@ textarea { font-family: inherit; }
 }
 
 /* ─── Responsive ─── */
+
+/* Tablet / small desktop */
 @media (max-width: 991px) {
   .app-container { padding: 0 16px; }
   .main-panel { padding: 20px; border-radius: var(--radius); }
@@ -962,6 +965,102 @@ textarea { font-family: inherit; }
   .profile-stats { justify-content: center; }
   .profile-actions { margin-left: 0; }
   .navbar-inner { flex-wrap: wrap; }
+  .navbar-search { width: 160px; }
+  .section-panel { padding: 18px 20px; }
+  .profile-hero { padding: 22px 20px; gap: 18px; }
+  .profile-name { font-size: 22px; }
+}
+
+/* Mobile landscape / small tablet */
+@media (max-width: 768px) {
+  .main-panel { padding: 16px; border-radius: 16px; }
+  .navbar { padding: 12px 0; }
+  .navbar-brand { padding: 8px 12px; gap: 10px; }
+  .brand-mark { width: 34px; height: 34px; font-size: 12px; border-radius: 10px; }
+  .brand-text strong { font-size: 13px; }
+  .brand-text small { font-size: 10px; }
+  .navbar-search { width: 140px; font-size: 12px; }
+  .nav-link { padding: 8px 10px; font-size: 12px; }
+  .nav-username { display: none; }
+  .detail-title { font-size: 20px; }
+  .detail-meta { flex-wrap: wrap; gap: 8px; }
+  .detail-section-title { font-size: 17px; }
+  .comment-body { margin-left: 0; margin-top: 6px; }
+  .reply-thread { margin-left: 0; padding: 10px 12px; }
+  .profile-hero { padding: 18px 16px; gap: 14px; border-radius: 20px; }
+  .profile-avatar { width: 64px; height: 64px; }
+  .profile-name { font-size: 20px; }
+  .profile-stats { gap: 8px; flex-wrap: wrap; }
+  .profile-stat { padding: 6px 12px; }
+  .profile-stat-value { font-size: 16px; }
+  .profile-actions { flex-wrap: wrap; justify-content: center; }
+  .section-panel { padding: 16px; border-radius: 16px; }
+  .section-heading { flex-wrap: wrap; gap: 10px; }
+  .chat-bubble { max-width: 88%; }
+  .chat-compose { flex-direction: column; }
+  .chat-compose .form-textarea { min-height: 60px; }
+  .settings-grid { gap: 16px; }
+  .post-avatar { width: 44px; height: 44px; }
+  .notice-card { gap: 10px; }
+  .empty-state { padding: 32px 16px; }
+  .pagination { flex-wrap: wrap; }
+  .toolbar-btn { padding: 6px 12px; font-size: 12px; }
+  .toolbar-hint { display: none; }
+  .auth-aside h1 { font-size: 26px; }
+  .auth-aside p { font-size: 13px; }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .app-container { padding: 0 10px; }
+  .main-panel { padding: 14px; border-radius: 14px; box-shadow: var(--shadow-sm); }
+  .navbar-inner { gap: 8px; }
+  .navbar-brand { padding: 6px 10px; gap: 8px; }
+  .brand-mark { width: 30px; height: 30px; font-size: 11px; border-radius: 8px; }
+  .brand-text small { display: none; }
+  .brand-text strong { font-size: 12px; }
+  .navbar-search { width: 100px; padding: 6px 10px !important; font-size: 12px; }
+  .nav-links { gap: 2px; }
+  .nav-link { padding: 6px 8px; font-size: 11px; }
+  .btn-sm { padding: 6px 10px; font-size: 11px; }
+  .detail-title { font-size: 18px; }
+  .detail-section-title { font-size: 16px; }
+  .post-card { padding: 14px 0; gap: 10px; }
+  .post-card-title { font-size: 16px; }
+  .post-card-body { font-size: 13px; }
+  .post-meta { font-size: 11px; }
+  .profile-hero { padding: 14px; gap: 12px; border-radius: 16px; }
+  .profile-avatar { width: 52px; height: 52px; border-width: 3px; }
+  .profile-name { font-size: 18px; }
+  .profile-stats { gap: 6px; }
+  .profile-stat { padding: 5px 10px; border-radius: 10px; }
+  .profile-stat-value { font-size: 14px; }
+  .profile-stat-label { font-size: 10px; }
+  .section-panel { padding: 14px; border-radius: 14px; }
+  .section-heading { margin-bottom: 12px; }
+  .chat-bubble { max-width: 92%; padding: 10px 14px; font-size: 13px; }
+  .comment-card { padding: 12px 0; }
+  .comment-avatar { width: 24px; height: 24px; }
+  .reply-thread { padding: 8px 10px; border-radius: 10px; }
+  .reply-item { font-size: 12px; }
+  .post-avatar { width: 38px; height: 38px; }
+  .notice-icon { width: 34px; height: 34px; font-size: 15px; }
+  .auth-shell { margin: 12px; border-radius: 16px; }
+  .auth-aside { padding: 18px; }
+  .auth-aside h1 { font-size: 22px; }
+  .auth-aside p { font-size: 12px; }
+  .auth-panel { padding: 18px; }
+  .form-label { font-size: 12px; }
+  .form-input, .form-textarea { padding: 10px 14px; font-size: 13px; }
+  .btn { padding: 10px 16px; font-size: 12px; }
+  .markdown-editor-toolbar { padding: 4px 6px; gap: 2px; }
+  .toolbar-btn { padding: 8px 10px; min-height: 36px; }
+  .rich-editor-content { min-height: 100px; }
+  .empty-state { padding: 24px 12px; }
+  .empty-state-icon { font-size: 36px; }
+  .empty-state-text { font-size: 13px; }
+  .search-bar { flex-direction: column; }
+  .user-card { padding: 12px; }
 }
 
 /* ─── Markdown Editor ─── */
