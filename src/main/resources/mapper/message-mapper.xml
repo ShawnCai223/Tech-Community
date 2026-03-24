@@ -108,15 +108,6 @@
         </if>
     </select>
 
-    <select id="selectNoticeUnreadCountByEntityType" resultType="int">
-        select count(id) from message
-        where status = 0
-        and from_id = 1
-        and to_id = #{userId}
-        and conversation_id = #{topic}
-        and cast(JSON_UNQUOTE(JSON_EXTRACT(content, '$.entityType')) as unsigned) = #{entityType}
-    </select>
-
     <select id="selectNotices" resultType="Message">
         select <include refid="selectFields"></include>
         from message
@@ -126,6 +117,16 @@
         and conversation_id = #{topic}
         order by create_time desc
         limit #{offset}, #{limit}
+    </select>
+
+    <select id="selectUnreadNotices" resultType="Message">
+        select <include refid="selectFields"></include>
+        from message
+        where status = 0
+        and from_id = 1
+        and to_id = #{userId}
+        and conversation_id = #{topic}
+        order by id desc
     </select>
 
 </mapper>

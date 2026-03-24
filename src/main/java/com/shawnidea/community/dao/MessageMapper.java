@@ -2,8 +2,6 @@ package com.shawnidea.community.dao;
 
 import com.shawnidea.community.entity.Message;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-
 import java.util.List;
 
 @Mapper
@@ -39,11 +37,9 @@ public interface MessageMapper {
     // 查询未读的通知的数量
     int selectNoticeUnreadCount(int userId, String topic);
 
-    int selectNoticeUnreadCountByEntityType(@Param("userId") int userId,
-                                           @Param("topic") String topic,
-                                           @Param("entityType") int entityType);
-
     // 查询某个主题所包含的通知列表
     List<Message> selectNotices(int userId, String topic, int offset, int limit);
+
+    List<Message> selectUnreadNotices(int userId, String topic);
 
 }

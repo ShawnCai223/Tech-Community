@@ -1,5 +1,6 @@
 package com.shawnidea.community.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.shawnidea.community.dao.MessageMapper;
 import com.shawnidea.community.entity.Message;
 import com.shawnidea.community.util.SensitiveFilter;
@@ -68,10 +69,6 @@ public class MessageService {
         return messageMapper.selectNoticeUnreadCount(userId, topic);
     }
 
-    public int findNoticeUnreadCountByEntityType(int userId, String topic, int entityType) {
-        return messageMapper.selectNoticeUnreadCountByEntityType(userId, topic, entityType);
-    }
-
     public List<Message> findNotices(int userId, String topic, int offset, int limit) {
         return messageMapper.selectNotices(userId, topic, offset, limit);
     }
@@ -79,8 +76,9 @@ public class MessageService {
     public Map<String, Integer> buildUnreadSummary(int userId) {
         int directMessageUnreadCount = findLetterUnreadCount(userId, null);
         int likeUnreadCount = findNoticeUnreadCount(userId, TOPIC_LIKE);
-        int commentUnreadCount = findNoticeUnreadCountByEntityType(userId, TOPIC_COMMENT, ENTITY_TYPE_POST);
-        int replyUnreadCount = findNoticeUnreadCountByEntityType(userId, TOPIC_COMMENT, ENTITY_TYPE_COMMENT);
+        int[] commentCounters = countCommentNoticeTypes(userId);
+        int commentUnreadCount = commentCounters[0];
+        int replyUnreadCount = commentCounters[1];
         int followUnreadCount = findNoticeUnreadCount(userId, TOPIC_FOLLOW);
 
         Map<String, Integer> summary = new HashMap<>();
@@ -92,6 +90,27 @@ public class MessageService {
         summary.put("noticeUnreadCount", likeUnreadCount + commentUnreadCount + replyUnreadCount);
         summary.put("totalUnreadCount", directMessageUnreadCount + likeUnreadCount + commentUnreadCount + replyUnreadCount);
         return summary;
+    }
+
+    private int[] countCommentNoticeTypes(int userId) {
+        int commentUnreadCount = 0;
+        int replyUnreadCount = 0;
+
+        List<Message> unreadCommentNotices = messageMapper.selectUnreadNotices(userId, TOPIC_COMMENT);
+        for (Message notice : unreadCommentNotices) {
+            String rawContent = HtmlUtils.htmlUnescape(notice.getContent());
+            Integer entityType = JSONObject.parseObject(rawContent).getInteger("entityType");
+            if (entityType == null) {
+                continue;
+            }
+            if (entityType == ENTITY_TYPE_POST) {
+                commentUnreadCount++;
+            } else if (entityType == ENTITY_TYPE_COMMENT) {
+                replyUnreadCount++;
+            }
+        }
+
+        return new int[]{commentUnreadCount, replyUnreadCount};
     }
 
 }
