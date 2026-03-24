@@ -48,7 +48,8 @@ public class CommentApiController implements AppConstants {
                 .setUserId(hostHolder.getUser().getId())
                 .setEntityType(comment.getEntityType())
                 .setEntityId(comment.getEntityId())
-                .setData("postId", postId);
+                .setData("postId", postId)
+                .setData("commentId", comment.getId());
         if (comment.getEntityType() == ENTITY_TYPE_POST) {
             DiscussPost target = discussPostService.findDiscussPostById(comment.getEntityId());
             event.setEntityUserId(target.getUserId());

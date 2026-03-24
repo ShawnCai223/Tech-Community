@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLetters, getNotices, sendLetter } from '../api/messages';
+import { getLetters, getNoticeDetail, sendLetter } from '../api/messages';
 import { useNotifications } from '../contexts/NotificationContext';
 
 export default function MessagesPage() {
-  const [tab, setTab] = useState<'letters' | 'notices'>('letters');
+  const FALLBACK_REFRESH_MS = 5000;
+  const [view, setView] = useState<'letters' | 'like' | 'comment' | 'reply' | 'follow'>('letters');
   const [letters, setLetters] = useState<any[]>([]);
-  const [notices, setNotices] = useState<any>(null);
+  const [notices, setNotices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCompose, setShowCompose] = useState(false);
   const [toName, setToName] = useState('');
@@ -15,11 +16,35 @@ export default function MessagesPage() {
   const { summary, refreshSummary } = useNotifications();
   const navigate = useNavigate();
 
+  const getNoticeQuery = () => {
+    if (view === 'comment') {
+      return { topic: 'comment', entityType: 1 };
+    }
+    if (view === 'reply') {
+      return { topic: 'comment', entityType: 2 };
+    }
+    if (view === 'like') {
+      return { topic: 'like' };
+    }
+    return { topic: 'follow' };
+  };
+
+  const getNoticeTarget = (item: any) => {
+    if (view === 'follow') {
+      return `/community/app/profile/${item.user?.id}`;
+    }
+    if (!item.postId) {
+      return '/community/app/messages';
+    }
+    const threadId = item.commentId ?? (item.entityType === 2 ? item.entityId : null);
+    return `/community/app/post/${item.postId}${threadId ? `#thread-${threadId}` : ''}`;
+  };
+
   const load = (silent = false) => {
     if (!silent) {
       setLoading(true);
     }
-    if (tab === 'letters') {
+    if (view === 'letters') {
       getLetters()
         .then((data) => setLetters(data.content))
         .catch(() => {})
@@ -29,10 +54,12 @@ export default function MessagesPage() {
           }
         });
     } else {
-      getNotices()
-        .then(setNotices)
+      const { topic, entityType } = getNoticeQuery();
+      getNoticeDetail(topic, 0, 20, entityType)
+        .then((data) => setNotices(data.content))
         .catch(() => {})
         .finally(() => {
+          refreshSummary();
           if (!silent) {
             setLoading(false);
           }
@@ -42,14 +69,19 @@ export default function MessagesPage() {
 
   useEffect(() => {
     load();
-  }, [tab]);
+  }, [view]);
 
   useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      load(true);
+      refreshSummary();
+    }, FALLBACK_REFRESH_MS);
+
     const handleRealtime = (event: Event) => {
       const payload = (event as CustomEvent).detail;
-      if (payload?.type === 'letter.created' && tab === 'letters') {
+      if (payload?.type === 'letter.created' && view === 'letters') {
         load(true);
-      } else if (payload?.type === 'notice.created' && tab === 'notices') {
+      } else if (payload?.type === 'notice.created' && view !== 'letters') {
         load(true);
       }
     };
@@ -64,10 +96,11 @@ export default function MessagesPage() {
     window.addEventListener('community:ws-event', handleRealtime as EventListener);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
+      window.clearInterval(intervalId);
       window.removeEventListener('community:ws-event', handleRealtime as EventListener);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [tab]);
+  }, [view]);
 
   const handleSend = async () => {
     setSendError('');
@@ -89,27 +122,41 @@ export default function MessagesPage() {
   return (
     <div>
       <div className="message-summary-grid">
-        <button className="message-summary-card" onClick={() => setTab('letters')} type="button">
+        <button className="message-summary-card" onClick={() => setView('letters')} type="button">
           <span className="message-summary-label">Direct Messages</span>
           <span className="message-summary-value">{summary.directMessageUnreadCount}</span>
         </button>
-        <button className="message-summary-card" onClick={() => setTab('notices')} type="button">
+        <button className="message-summary-card" onClick={() => setView('like')} type="button">
           <span className="message-summary-label">Likes</span>
           <span className="message-summary-value">{summary.likeUnreadCount}</span>
         </button>
-        <button className="message-summary-card" onClick={() => setTab('notices')} type="button">
+        <button className="message-summary-card" onClick={() => setView('comment')} type="button">
           <span className="message-summary-label">Comments</span>
           <span className="message-summary-value">{summary.commentUnreadCount}</span>
         </button>
-        <button className="message-summary-card" onClick={() => setTab('notices')} type="button">
+        <button className="message-summary-card" onClick={() => setView('reply')} type="button">
           <span className="message-summary-label">Replies</span>
           <span className="message-summary-value">{summary.replyUnreadCount}</span>
+        </button>
+        <button className="message-summary-card" onClick={() => setView('follow')} type="button">
+          <span className="message-summary-label">New Followers</span>
+          <span className="message-summary-value">{summary.followUnreadCount}</span>
         </button>
       </div>
 
       <div className="section-heading">
-        <h2>Messages</h2>
-        {tab === 'letters' && (
+        <h2>
+          {view === 'letters'
+            ? 'Messages'
+            : view === 'like'
+              ? 'Likes'
+              : view === 'comment'
+                ? 'Comments'
+                : view === 'reply'
+                  ? 'Replies'
+                  : 'New Followers'}
+        </h2>
+        {view === 'letters' && (
           <button className="btn btn-primary btn-sm" onClick={() => setShowCompose(!showCompose)}>
             New Message
           </button>
@@ -134,16 +181,7 @@ export default function MessagesPage() {
         </div>
       )}
 
-      <div className="tab-group">
-        <button className={`tab-btn ${tab === 'letters' ? 'active' : ''}`} onClick={() => setTab('letters')}>
-          Direct Messages
-        </button>
-        <button className={`tab-btn ${tab === 'notices' ? 'active' : ''}`} onClick={() => setTab('notices')}>
-          Notifications
-        </button>
-      </div>
-
-      {loading ? <div className="loading">Loading...</div> : tab === 'letters' ? (
+      {loading ? <div className="loading">Loading...</div> : view === 'letters' ? (
         letters.length === 0 ? (
           <div className="empty-state"><div className="empty-state-text">No messages yet.</div></div>
         ) : (
@@ -163,26 +201,43 @@ export default function MessagesPage() {
         )
       ) : (
         <div>
-          {notices && ['comment', 'like', 'follow'].map(topic => {
-            const info = notices[topic];
-            if (!info || !info.message) return null;
-            return (
-              <div key={topic} className="notice-card" onClick={() => navigate(`/community/app/notices/${topic}`)} style={{ cursor: 'pointer' }}>
-                <div className={`notice-icon notice-icon-${topic}`}>
-                  {topic === 'comment' ? '💬' : topic === 'like' ? '❤️' : '👤'}
+          {notices.length === 0 ? (
+            <div className="empty-state"><div className="empty-state-text">No notifications.</div></div>
+          ) : (
+            notices.map((item: any, index: number) => (
+              <div
+                key={item.notice.id ?? index}
+                className="notice-card"
+                onClick={() => navigate(getNoticeTarget(item))}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className={`notice-icon notice-icon-${view === 'follow' ? 'follow' : view === 'like' ? 'like' : 'comment'}`}>
+                  {view === 'like' ? '❤️' : view === 'follow' ? '👤' : '💬'}
                 </div>
                 <div className="notice-body">
                   <div className="notice-text">
-                    <strong>{info.user?.username}</strong>
-                    {topic === 'comment' ? ' commented on your post' : topic === 'like' ? ' liked your content' : ' started following you'}
+                    <strong>{item.user?.username}</strong>
+                    {view === 'like'
+                      ? ' liked your content'
+                      : view === 'comment'
+                        ? ' commented on your post'
+                        : view === 'reply'
+                          ? ' replied to your comment'
+                          : ' started following you'}
                   </div>
-                  <div className="notice-time">
-                    {info.count} total · {info.unread} unread
-                  </div>
+                  {view !== 'follow' && item.postId && (
+                    <div className="notice-time">
+                      Open post {item.commentId ? 'and jump to the related thread' : 'details'}.
+                    </div>
+                  )}
+                  {view === 'follow' && (
+                    <div className="notice-time">Open follower profile.</div>
+                  )}
+                  <div className="notice-time">{new Date(item.notice.createTime).toLocaleString()}</div>
                 </div>
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
       )}
     </div>

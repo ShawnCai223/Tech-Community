@@ -144,13 +144,14 @@ public class MessageApiController implements AppConstants {
     @GetMapping("/notices/{topic}")
     public ApiResponse<PageResponse<Map<String, Object>>> noticeDetail(
             @PathVariable String topic,
+            @RequestParam(required = false) Integer entityType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int limit) {
         User user = hostHolder.getUser();
         int offset = page * limit;
 
-        List<Message> notices = messageService.findNotices(user.getId(), topic, offset, limit);
-        int totalRows = messageService.findNoticeCount(user.getId(), topic);
+        List<Message> notices = messageService.findNotices(user.getId(), topic, entityType, offset, limit);
+        int totalRows = messageService.findNoticeCount(user.getId(), topic, entityType);
 
         List<Map<String, Object>> list = new ArrayList<>();
         for (Message notice : notices) {
@@ -161,6 +162,7 @@ public class MessageApiController implements AppConstants {
             vo.put("entityType", content.get("entityType"));
             vo.put("entityId", content.get("entityId"));
             vo.put("postId", content.get("postId"));
+            vo.put("commentId", content.get("commentId"));
             list.add(vo);
         }
 

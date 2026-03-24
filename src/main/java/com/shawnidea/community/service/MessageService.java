@@ -62,7 +62,11 @@ public class MessageService {
     }
 
     public int findNoticeCount(int userId, String topic) {
-        return messageMapper.selectNoticeCount(userId, topic);
+        return messageMapper.selectNoticeCount(userId, topic, null);
+    }
+
+    public int findNoticeCount(int userId, String topic, Integer entityType) {
+        return messageMapper.selectNoticeCount(userId, topic, entityType);
     }
 
     public int findNoticeUnreadCount(int userId, String topic) {
@@ -70,7 +74,11 @@ public class MessageService {
     }
 
     public List<Message> findNotices(int userId, String topic, int offset, int limit) {
-        return messageMapper.selectNotices(userId, topic, offset, limit);
+        return messageMapper.selectNotices(userId, topic, null, offset, limit);
+    }
+
+    public List<Message> findNotices(int userId, String topic, Integer entityType, int offset, int limit) {
+        return messageMapper.selectNotices(userId, topic, entityType, offset, limit);
     }
 
     public Map<String, Integer> buildUnreadSummary(int userId) {
@@ -87,8 +95,8 @@ public class MessageService {
         summary.put("commentUnreadCount", commentUnreadCount);
         summary.put("replyUnreadCount", replyUnreadCount);
         summary.put("followUnreadCount", followUnreadCount);
-        summary.put("noticeUnreadCount", likeUnreadCount + commentUnreadCount + replyUnreadCount);
-        summary.put("totalUnreadCount", directMessageUnreadCount + likeUnreadCount + commentUnreadCount + replyUnreadCount);
+        summary.put("noticeUnreadCount", likeUnreadCount + commentUnreadCount + replyUnreadCount + followUnreadCount);
+        summary.put("totalUnreadCount", directMessageUnreadCount + likeUnreadCount + commentUnreadCount + replyUnreadCount + followUnreadCount);
         return summary;
     }
 

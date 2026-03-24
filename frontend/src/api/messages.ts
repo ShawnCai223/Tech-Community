@@ -21,8 +21,8 @@ export async function getNotices() {
   return res.data.data;
 }
 
-export async function getNoticeDetail(topic: string, page = 0, limit = 10) {
-  const res = await client.get<ApiResponse<PageResponse<any>>>(`/messages/notices/${topic}`, { params: { page, limit } });
+export async function getNoticeDetail(topic: string, page = 0, limit = 10, entityType?: number) {
+  const res = await client.get<ApiResponse<PageResponse<any>>>(`/messages/notices/${topic}`, { params: { page, limit, entityType } });
   return res.data.data;
 }
 

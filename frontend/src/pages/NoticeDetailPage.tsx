@@ -1,24 +1,36 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { getNoticeDetail } from '../api/messages';
+import { useNotifications } from '../contexts/NotificationContext';
 
 export default function NoticeDetailPage() {
   const { topic } = useParams<{ topic: string }>();
+  const [searchParams] = useSearchParams();
+  const { refreshSummary } = useNotifications();
   const [notices, setNotices] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const entityType = searchParams.get('entityType');
+  const parsedEntityType = entityType ? Number(entityType) : undefined;
 
   useEffect(() => {
     if (!topic) return;
     setLoading(true);
-    getNoticeDetail(topic, page, 10)
+    getNoticeDetail(topic, page, 10, parsedEntityType)
       .then((data) => { setNotices(data.content); setTotalPages(data.totalPages); })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [topic, page]);
+      .finally(() => {
+        refreshSummary();
+        setLoading(false);
+      });
+  }, [topic, page, entityType]);
 
-  const topicLabel = topic === 'comment' ? 'Comments' : topic === 'like' ? 'Likes' : 'Follows';
+  const topicLabel = topic === 'comment'
+    ? parsedEntityType === 2 ? 'Replies' : 'Comments'
+    : topic === 'like'
+      ? 'Likes'
+      : 'Follows';
 
   if (loading) return <div className="loading">Loading...</div>;
 
@@ -38,8 +50,19 @@ export default function NoticeDetailPage() {
             <div className="notice-body">
               <div className="notice-text">
                 <strong>{item.user?.username}</strong>
-                {topic === 'comment' ? ' commented on ' : topic === 'like' ? ' liked ' : ' followed you'}
-                {item.postId && <Link to={`/community/app/post/${item.postId}`}>view post</Link>}
+                {topic === 'comment'
+                  ? parsedEntityType === 2 ? ' replied in ' : ' commented on '
+                  : topic === 'like'
+                    ? ' liked '
+                    : ' followed you'}
+                {item.postId && (
+                  <Link to={`/community/app/post/${item.postId}${item.commentId ? `#thread-${item.commentId}` : ''}`}>
+                    view post
+                  </Link>
+                )}
+                {topic === 'follow' && item.user?.id && (
+                  <Link to={`/community/app/profile/${item.user.id}`}>view profile</Link>
+                )}
               </div>
               <div className="notice-time">{new Date(item.notice.createTime).toLocaleString()}</div>
             </div>

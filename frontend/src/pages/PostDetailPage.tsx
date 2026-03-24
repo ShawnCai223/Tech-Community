@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getPostDetail } from '../api/posts';
 import { toggleLike } from '../api/likes';
@@ -27,6 +27,18 @@ export default function PostDetailPage() {
   };
 
   useEffect(load, [id]);
+
+  useEffect(() => {
+    if (!data) return;
+    if (!window.location.hash) return;
+
+    const targetId = window.location.hash.slice(1);
+    const timer = window.setTimeout(() => {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+
+    return () => window.clearTimeout(timer);
+  }, [data]);
 
   const handleLikePost = async () => {
     if (!data || !currentUser) return;
@@ -154,7 +166,7 @@ export default function PostDetailPage() {
       )}
 
       {comments && comments.map((c: any) => (
-        <div key={c.comment.id} className="comment-card">
+        <div key={c.comment.id} id={`thread-${c.comment.id}`} className="comment-card">
           <div className="comment-header">
             <img src={c.user.headerUrl} alt={`${c.user.username}'s avatar`} className="comment-avatar" />
             <span className="comment-author">{c.user.username}</span>
@@ -212,7 +224,7 @@ export default function PostDetailPage() {
           {c.replies && c.replies.length > 0 && (
             <div className="reply-thread">
               {c.replies.map((r: any) => (
-                <div key={r.reply.id} className="reply-item" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div key={r.reply.id} id={`thread-${r.reply.id}`} className="reply-item" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div>
                     <strong>{r.user.username}</strong>
                     {r.target && <span> replied to <strong>{r.target.username}</strong></span>}

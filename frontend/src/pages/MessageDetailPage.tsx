@@ -7,6 +7,7 @@ import type { User } from '../types/api';
 import { useNotifications } from '../contexts/NotificationContext';
 
 export default function MessageDetailPage() {
+  const FALLBACK_REFRESH_MS = 5000;
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user: currentUser } = useAuth();
   const { refreshSummary } = useNotifications();
@@ -25,6 +26,7 @@ export default function MessageDetailPage() {
       .then((data) => setMessages([...data.content].reverse()))
       .catch(() => {})
       .finally(() => {
+        refreshSummary();
         if (!silent) {
           setLoading(false);
         }
@@ -34,6 +36,10 @@ export default function MessageDetailPage() {
   useEffect(load, [conversationId]);
 
   useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      load(true);
+    }, FALLBACK_REFRESH_MS);
+
     const handleRealtime = (event: Event) => {
       const payload = (event as CustomEvent).detail;
       if (payload?.type === 'letter.created' && payload.data?.conversationId === conversationId) {
@@ -51,6 +57,7 @@ export default function MessageDetailPage() {
     window.addEventListener('community:ws-event', handleRealtime as EventListener);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
+      window.clearInterval(intervalId);
       window.removeEventListener('community:ws-event', handleRealtime as EventListener);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

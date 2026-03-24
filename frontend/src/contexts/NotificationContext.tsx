@@ -40,6 +40,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
+  const summaryPollRef = useRef<number | null>(null);
 
   const refreshSummary = async () => {
     if (!isAuthenticated) {
@@ -61,6 +62,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (reconnectTimerRef.current) {
         window.clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
+      }
+      if (summaryPollRef.current) {
+        window.clearInterval(summaryPollRef.current);
+        summaryPollRef.current = null;
       }
       socketRef.current?.close();
       socketRef.current = null;
@@ -108,6 +113,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
 
     refreshSummary();
+    summaryPollRef.current = window.setInterval(() => {
+      refreshSummary();
+    }, 5000);
     connect();
 
     return () => {
@@ -116,6 +124,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (reconnectTimerRef.current) {
         window.clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
+      }
+      if (summaryPollRef.current) {
+        window.clearInterval(summaryPollRef.current);
+        summaryPollRef.current = null;
       }
       socketRef.current?.close();
       socketRef.current = null;
