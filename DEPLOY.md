@@ -1,51 +1,55 @@
-# Deploy to `shawnidea.com/community`
+# Deployment
 
-This project already runs under the `/community` context path:
+This application is deployed under:
+
+```text
+https://shawnidea.com/community
+```
+
+The backend already uses this context path:
 
 ```properties
 server.servlet.context-path=/community
 ```
 
-That means the clean production shape is:
+Production shape:
 
 - Nginx serves `https://shawnidea.com`
-- Spring Boot keeps listening on `127.0.0.1:8080`
-- Nginx forwards `/community` traffic to the Spring Boot app
+- Spring Boot listens on `127.0.0.1:8080`
+- Nginx forwards `/community` traffic to Spring Boot
 
-## 1. Prepare production env
+## Production Environment
 
-Copy `.env.prod.example` to `.env.prod` and fill in the real values:
+Create `.env.prod` from the example:
 
 ```bash
 cp .env.prod.example .env.prod
 ```
 
-Important:
+Important values:
 
 - `COMMUNITY_DOMAIN` must be `https://shawnidea.com`
 - Do not set it to `https://shawnidea.com/community`
-- The app already appends `/community` from `server.servlet.context-path`
-- R2 public base URLs should be bucket/domain roots without a trailing slash
+- R2 public base URLs should be bucket or domain roots without a trailing slash
 
-## 2. Start the application
+## Start the Production App
 
 ```bash
 chmod +x scripts/prod-run.sh
 ./scripts/prod-run.sh
 ```
 
-The app will be available locally at:
+Local production process URL:
 
 ```text
 http://127.0.0.1:8080/community
 ```
 
-## 3. Configure Nginx
+## Nginx
 
-Use the sample config in `deploy/nginx/shawnidea.com.conf` and merge its
-`location /community/` block into your existing `shawnidea.com` server block.
+Use `deploy/nginx/shawnidea.com.conf` as the reference and merge its `/community` rules into your existing `shawnidea.com` server block.
 
-Core rule:
+Core proxy rule:
 
 ```nginx
 location /community/ {
@@ -53,7 +57,7 @@ location /community/ {
 }
 ```
 
-Also keep this redirect so `/community` becomes `/community/`:
+Redirect `/community` to `/community/`:
 
 ```nginx
 location = /community {
@@ -61,27 +65,27 @@ location = /community {
 }
 ```
 
-## 4. DNS and HTTPS
+## DNS and HTTPS
 
-- Point the `A` record of `shawnidea.com` to your server IP
+- Point the `A` record for `shawnidea.com` to the server IP
 - Issue an HTTPS certificate for `shawnidea.com`
-- Reload Nginx after the config change
+- Reload Nginx after config changes
 
-## 5. Verify
+## Verification
 
-After deployment, these URLs should work:
+After deployment, verify:
 
 - `https://shawnidea.com/community`
 - `https://shawnidea.com/community/login`
 - `https://shawnidea.com/community/register`
 
-If registration emails are enabled, the activation link should also point to:
+If registration email is enabled, activation links should resolve to:
 
 ```text
 https://shawnidea.com/community/activation/{userId}/{code}
 ```
 
-## 6. Optional: GitHub Actions auto deploy
+## GitHub Actions Auto Deploy
 
 This repository includes `.github/workflows/deploy-ec2.yml`.
 
@@ -92,18 +96,19 @@ On every push to `main`, GitHub Actions will:
 - run `git pull --ff-only origin main`
 - run `mvn -B clean package -DskipTests`
 - restart `tech-community`
-- verify both `http://127.0.0.1:8080/community/app/index.html`
-- and `http://127.0.0.1:8080/community/api/v1/posts?page=0&limit=1`
+- verify:
+  - `http://127.0.0.1:8080/community/app/index.html`
+  - `http://127.0.0.1:8080/community/api/v1/posts?page=0&limit=1`
 
 Required GitHub repository secrets:
 
-- `EC2_HOST` e.g. `54.176.102.73`
-- `EC2_USER` e.g. `ubuntu`
-- `EC2_SSH_KEY_B64` base64-encoded private key contents from your `.pem`
-- `EC2_PORT` usually `22`
+- `EC2_HOST`
+- `EC2_USER`
+- `EC2_SSH_KEY_B64`
+- `EC2_PORT`
 
 Important:
 
-- The EC2 user must be able to run `sudo systemctl restart tech-community`
+- The EC2 user must be allowed to run `sudo systemctl restart tech-community`
 - The server checkout must already exist at `/var/www/tech-community`
-- `.env.prod` must already be present on the server
+- `.env.prod` must already exist on the server

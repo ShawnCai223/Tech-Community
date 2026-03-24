@@ -1,14 +1,21 @@
-# Test Layout
+# Testing
 
-The test suite is intentionally split into three layers:
+The repository uses a layered test strategy so day-to-day development stays fast while external dependency coverage remains opt-in.
 
-## Default integration coverage
+## CI Coverage
 
-These are the tests that should remain meaningful in day-to-day development:
+GitHub Actions currently runs:
+
+- Backend tests with the `test` Spring profile
+- Frontend type check and production build
+
+See `.github/workflows/ci-tests.yml` for the exact steps.
+
+## Default Integration Coverage
+
+These tests should remain meaningful in normal development:
 
 - `MainFlowIntegrationTests`
-
-They are assertion-based and exercise real application behavior.
 
 Run:
 
@@ -16,9 +23,9 @@ Run:
 mvn -q -Dtest=MainFlowIntegrationTests test
 ```
 
-## External dependency integration
+## External Dependency Integration
 
-These tests require services outside the default local test profile and are opt-in:
+These tests depend on services outside the default local test profile and should be treated as opt-in:
 
 - `ElasticsearchIntegrationTests`
 - `KafkaTests`
@@ -31,9 +38,9 @@ mvn -q -Dcommunity.es.integration=true -Dtest=ElasticsearchIntegrationTests test
 mvn -q -Dcommunity.es.integration=true -Dcommunity.es.ik.integration=true -Dtest=ElasticsearchIntegrationTests test
 ```
 
-## Manual exploration tests
+## Manual Exploration Tests
 
-These are legacy exploratory tests kept for reference only. They are disabled by default because they are not assertion-based, may mutate shared state, or mainly print output:
+These are legacy exploratory tests kept only for reference. They are disabled by default because they are not assertion-based, may mutate state, or mainly print output:
 
 - `CaffeineTests`
 - `ShawnIdeaApplicationTests`
@@ -46,4 +53,4 @@ These are legacy exploratory tests kept for reference only. They are disabled by
 - `ThreadPoolTests`
 - `TransactionTests`
 
-If one of these is still useful, the next step is to convert it into an assertion-based test and remove the manual classification.
+If one of these still matters, the next step should be to rewrite it as an assertion-based automated test.
