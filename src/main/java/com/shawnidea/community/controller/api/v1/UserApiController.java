@@ -9,17 +9,24 @@ import com.shawnidea.community.util.AppConstants;
 import com.shawnidea.community.util.AppUtil;
 import com.shawnidea.community.util.HostHolder;
 import com.shawnidea.community.service.ObjectStorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserApiController implements AppConstants {
+    private static final Logger logger = LoggerFactory.getLogger(UserApiController.class);
 
     @Autowired
     private UserService userService;
@@ -35,6 +42,15 @@ public class UserApiController implements AppConstants {
 
     @Autowired
     private ObjectStorageService objectStorageService;
+
+    @Value("${community.path.domain}")
+    private String domain;
+
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
+
+    @Value("${community.path.upload}")
+    private String uploadPath;
 
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> me() {
@@ -68,19 +84,14 @@ public class UserApiController implements AppConstants {
         if (filename == null || !filename.contains(".")) {
             return ApiResponse.error(400, "Invalid file format.");
         }
-        String suffix = filename.substring(filename.lastIndexOf("."));
+        String suffix = filename.substring(filename.lastIndexOf(".")).toLowerCase();
         if (!".png".equals(suffix) && !".jpg".equals(suffix) && !".jpeg".equals(suffix)) {
             return ApiResponse.error(400, "Only PNG and JPG files are supported.");
         }
 
         try {
-            String fileName = "headers/" + AppUtil.generateUUID() + suffix.toLowerCase();
-            String headerUrl = objectStorageService.uploadHeader(
-                    fileName,
-                    headerImage.getInputStream(),
-                    headerImage.getSize(),
-                    headerImage.getContentType()
-            );
+            String fileName = "headers/" + AppUtil.generateUUID() + suffix;
+            String headerUrl = uploadAvatarToPrimaryOrLocal(headerImage, fileName);
             userService.updateHeader(user.getId(), headerUrl);
 
             Map<String, String> data = new HashMap<>();
@@ -89,6 +100,27 @@ public class UserApiController implements AppConstants {
         } catch (IOException e) {
             return ApiResponse.error(500, "Upload failed.");
         }
+    }
+
+    private String uploadAvatarToPrimaryOrLocal(MultipartFile headerImage, String fileName) throws IOException {
+        try {
+            return objectStorageService.uploadHeader(
+                    fileName,
+                    headerImage.getInputStream(),
+                    headerImage.getSize(),
+                    headerImage.getContentType()
+            );
+        } catch (RuntimeException exception) {
+            logger.warn("Primary avatar upload failed. Falling back to local storage: {}", exception.getMessage());
+            return saveAvatarLocally(headerImage, fileName);
+        }
+    }
+
+    private String saveAvatarLocally(MultipartFile headerImage, String fileName) throws IOException {
+        Path target = Path.of(uploadPath).resolve(fileName).normalize();
+        Files.createDirectories(target.getParent());
+        Files.copy(headerImage.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+        return domain + contextPath + "/upload/" + fileName;
     }
 
     private Map<String, Object> buildUserProfile(User user) {
