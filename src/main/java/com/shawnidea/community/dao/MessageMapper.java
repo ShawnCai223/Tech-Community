@@ -47,6 +47,8 @@ public interface MessageMapper {
                                 @Param("offset") int offset,
                                 @Param("limit") int limit);
 
+    Message selectMessageById(int id);
+
     List<Message> selectUnreadNotices(int userId, String topic);
 
 }

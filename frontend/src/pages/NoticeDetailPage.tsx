@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { getNoticeDetail } from '../api/messages';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { getNoticeDetail, markNoticeRead } from '../api/messages';
 import { useNotifications } from '../contexts/NotificationContext';
 
 export default function NoticeDetailPage() {
   const { topic } = useParams<{ topic: string }>();
   const [searchParams] = useSearchParams();
   const { refreshSummary } = useNotifications();
+  const navigate = useNavigate();
   const [notices, setNotices] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -20,10 +21,7 @@ export default function NoticeDetailPage() {
     getNoticeDetail(topic, page, 10, parsedEntityType)
       .then((data) => { setNotices(data.content); setTotalPages(data.totalPages); })
       .catch(() => {})
-      .finally(() => {
-        refreshSummary();
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, [topic, page, entityType]);
 
   const topicLabel = topic === 'comment'
@@ -31,6 +29,31 @@ export default function NoticeDetailPage() {
     : topic === 'like'
       ? 'Likes'
       : 'Follows';
+
+  const getTarget = (item: any) => {
+    if (topic === 'follow') {
+      return `/community/app/profile/${item.user?.id}`;
+    }
+    if (!item.postId) return null;
+    const threadId = item.commentId ?? (item.entityType === 2 ? item.entityId : null);
+    return `/community/app/post/${item.postId}${threadId ? `#thread-${threadId}` : ''}`;
+  };
+
+  const handleClick = async (item: any, index: number) => {
+    if (item.notice.status === 0) {
+      const updated = [...notices];
+      updated[index] = { ...item, notice: { ...item.notice, status: 1 } };
+      setNotices(updated);
+      try {
+        await markNoticeRead(item.notice.id);
+        refreshSummary();
+      } catch { /* ignore */ }
+    }
+    const target = getTarget(item);
+    if (target) {
+      navigate(target);
+    }
+  };
 
   if (loading) return <div className="loading">Loading...</div>;
 
@@ -43,28 +66,26 @@ export default function NoticeDetailPage() {
         <div className="empty-state"><div className="empty-state-text">No notifications.</div></div>
       ) : (
         notices.map((item: any, i: number) => (
-          <div key={i} className="notice-card">
-            <div className={`notice-icon notice-icon-${topic}`}>
-              {topic === 'comment' ? '💬' : topic === 'like' ? '❤️' : '👤'}
-            </div>
-            <div className="notice-body">
-              <div className="notice-text">
-                <strong>{item.user?.username}</strong>
-                {topic === 'comment'
-                  ? parsedEntityType === 2 ? ' replied in ' : ' commented on '
-                  : topic === 'like'
-                    ? ' liked '
-                    : ' followed you'}
-                {item.postId && (
-                  <Link to={`/community/app/post/${item.postId}${item.commentId ? `#thread-${item.commentId}` : ''}`}>
-                    view post
-                  </Link>
-                )}
-                {topic === 'follow' && item.user?.id && (
-                  <Link to={`/community/app/profile/${item.user.id}`}>view profile</Link>
-                )}
+          <div
+            key={item.notice.id ?? i}
+            className="message-item"
+            onClick={() => handleClick(item, i)}
+          >
+            <div className="message-body">
+              <div className="message-title">
+                {item.notice.status === 0 && <span className="unread-star">*</span>}
+                {item.user?.username}
               </div>
-              <div className="notice-time">{new Date(item.notice.createTime).toLocaleString()}</div>
+              <div className="message-preview">
+                {topic === 'comment'
+                  ? parsedEntityType === 2 ? 'replied to your comment' : 'commented on your post'
+                  : topic === 'like'
+                    ? 'liked your content'
+                    : 'started following you'}
+              </div>
+            </div>
+            <div className="message-meta">
+              <div>{new Date(item.notice.createTime).toLocaleDateString()}</div>
             </div>
           </div>
         ))

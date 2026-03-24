@@ -166,20 +166,22 @@ public class MessageApiController implements AppConstants {
             list.add(vo);
         }
 
-        // Mark as read
-        List<Integer> unreadIds = new ArrayList<>();
-        for (Message notice : notices) {
-            if (notice.getToId() == user.getId() && notice.getStatus() == 0) {
-                unreadIds.add(notice.getId());
-            }
-        }
-        if (!unreadIds.isEmpty()) {
-            messageService.readMessage(unreadIds);
-            messageWebSocketHandler.sendSummaryUpdate(user.getId());
-        }
-
         int totalPages = (totalRows + limit - 1) / limit;
         return ApiResponse.ok(new PageResponse<>(list, page, totalPages, totalRows));
+    }
+
+    @PutMapping("/notices/{id}/read")
+    public ApiResponse<Void> markNoticeRead(@PathVariable int id) {
+        User user = hostHolder.getUser();
+        Message notice = messageService.findMessageById(id);
+        if (notice == null || notice.getToId() != user.getId()) {
+            return ApiResponse.error(404, "Notice not found.");
+        }
+        if (notice.getStatus() == 0) {
+            messageService.readMessage(Collections.singletonList(id));
+            messageWebSocketHandler.sendSummaryUpdate(user.getId());
+        }
+        return ApiResponse.ok();
     }
 
     private Map<String, Object> buildNoticeInfo(int userId, String topic) {

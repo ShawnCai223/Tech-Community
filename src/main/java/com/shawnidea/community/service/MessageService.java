@@ -53,6 +53,10 @@ public class MessageService {
         return messageMapper.insertMessage(message);
     }
 
+    public Message findMessageById(int id) {
+        return messageMapper.selectMessageById(id);
+    }
+
     public int readMessage(List<Integer> ids) {
         return messageMapper.updateStatus(ids, 1);
     }

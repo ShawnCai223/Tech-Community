@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLetters, getNoticeDetail, sendLetter } from '../api/messages';
+import { getLetters, getNoticeDetail, sendLetter, markNoticeRead } from '../api/messages';
 import { useNotifications } from '../contexts/NotificationContext';
 
 export default function MessagesPage() {
@@ -40,7 +40,7 @@ export default function MessagesPage() {
     return `/community/app/post/${item.postId}${threadId ? `#thread-${threadId}` : ''}`;
   };
 
-  const load = (silent = false) => {
+  const load = useCallback((silent = false) => {
     if (!silent) {
       setLoading(true);
     }
@@ -59,12 +59,25 @@ export default function MessagesPage() {
         .then((data) => setNotices(data.content))
         .catch(() => {})
         .finally(() => {
-          refreshSummary();
           if (!silent) {
             setLoading(false);
           }
         });
     }
+  }, [view]);
+
+  const handleNoticeClick = async (item: any, index: number) => {
+    // Mark as read locally first for instant UI feedback
+    if (item.notice.status === 0) {
+      const updated = [...notices];
+      updated[index] = { ...item, notice: { ...item.notice, status: 1 } };
+      setNotices(updated);
+      try {
+        await markNoticeRead(item.notice.id);
+        refreshSummary();
+      } catch { /* ignore */ }
+    }
+    navigate(getNoticeTarget(item));
   };
 
   useEffect(() => {
@@ -207,33 +220,26 @@ export default function MessagesPage() {
             notices.map((item: any, index: number) => (
               <div
                 key={item.notice.id ?? index}
-                className="notice-card"
-                onClick={() => navigate(getNoticeTarget(item))}
-                style={{ cursor: 'pointer' }}
+                className="message-item"
+                onClick={() => handleNoticeClick(item, index)}
               >
-                <div className={`notice-icon notice-icon-${view === 'follow' ? 'follow' : view === 'like' ? 'like' : 'comment'}`}>
-                  {view === 'like' ? '❤️' : view === 'follow' ? '👤' : '💬'}
-                </div>
-                <div className="notice-body">
-                  <div className="notice-text">
-                    <strong>{item.user?.username}</strong>
-                    {view === 'like'
-                      ? ' liked your content'
-                      : view === 'comment'
-                        ? ' commented on your post'
-                        : view === 'reply'
-                          ? ' replied to your comment'
-                          : ' started following you'}
+                <div className="message-body">
+                  <div className="message-title">
+                    {item.notice.status === 0 && <span className="unread-star">*</span>}
+                    {item.user?.username}
                   </div>
-                  {view !== 'follow' && item.postId && (
-                    <div className="notice-time">
-                      Open post {item.commentId ? 'and jump to the related thread' : 'details'}.
-                    </div>
-                  )}
-                  {view === 'follow' && (
-                    <div className="notice-time">Open follower profile.</div>
-                  )}
-                  <div className="notice-time">{new Date(item.notice.createTime).toLocaleString()}</div>
+                  <div className="message-preview">
+                    {view === 'like'
+                      ? 'liked your content'
+                      : view === 'comment'
+                        ? 'commented on your post'
+                        : view === 'reply'
+                          ? 'replied to your comment'
+                          : 'started following you'}
+                  </div>
+                </div>
+                <div className="message-meta">
+                  <div>{new Date(item.notice.createTime).toLocaleDateString()}</div>
                 </div>
               </div>
             ))

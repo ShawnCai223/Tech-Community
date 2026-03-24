@@ -125,6 +125,12 @@
         limit #{offset}, #{limit}
     </select>
 
+    <select id="selectMessageById" resultType="Message">
+        select <include refid="selectFields"></include>
+        from message
+        where id = #{id}
+    </select>
+
     <select id="selectUnreadNotices" resultType="Message">
         select <include refid="selectFields"></include>
         from message

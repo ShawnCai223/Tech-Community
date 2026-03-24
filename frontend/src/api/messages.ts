@@ -26,6 +26,11 @@ export async function getNoticeDetail(topic: string, page = 0, limit = 10, entit
   return res.data.data;
 }
 
+export async function markNoticeRead(id: number) {
+  const res = await client.put<ApiResponse<void>>(`/messages/notices/${id}/read`);
+  return res.data;
+}
+
 export async function getMessageSummary() {
   const res = await client.get<ApiResponse<MessageSummary>>('/messages/summary');
   return res.data.data;
