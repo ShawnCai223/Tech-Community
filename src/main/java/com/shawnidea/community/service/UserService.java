@@ -201,6 +201,50 @@ public class UserService implements AppConstants {
         return rows;
     }
 
+    public Map<String, Object> updatePassword(int userId, String originalPassword, String newPassword, String confirmPassword) {
+        Map<String, Object> map = new HashMap<>();
+
+        if (StringUtils.isBlank(originalPassword)) {
+            map.put("originalPasswordMsg", "Current password cannot be empty!");
+            return map;
+        }
+        if (StringUtils.isBlank(newPassword)) {
+            map.put("newPasswordMsg", "New password cannot be empty!");
+            return map;
+        }
+        if (StringUtils.isBlank(confirmPassword)) {
+            map.put("confirmPasswordMsg", "Please confirm your new password!");
+            return map;
+        }
+
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            map.put("userMsg", "User not found.");
+            return map;
+        }
+
+        String currentPassword = AppUtil.md5(originalPassword + user.getSalt());
+        if (!currentPassword.equals(user.getPassword())) {
+            map.put("originalPasswordMsg", "Current password is incorrect!");
+            return map;
+        }
+
+        if (originalPassword.equals(newPassword)) {
+            map.put("newPasswordMsg", "New password must be different from the current password!");
+            return map;
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            map.put("confirmPasswordMsg", "The new passwords do not match!");
+            return map;
+        }
+
+        String encryptedPassword = AppUtil.md5(newPassword + user.getSalt());
+        userMapper.updatePassword(userId, encryptedPassword);
+        clearCache(userId);
+        return map;
+    }
+
     public User findUserByName(String username) {
         return normalizeUser(userMapper.selectByName(username));
     }

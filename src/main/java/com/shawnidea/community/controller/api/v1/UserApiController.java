@@ -102,6 +102,32 @@ public class UserApiController implements AppConstants {
         }
     }
 
+    @PostMapping("/me/password")
+    public ApiResponse<Void> updatePassword(@RequestBody Map<String, String> body) {
+        User user = hostHolder.getUser();
+        if (user == null) {
+            return ApiResponse.error(401, "You are not signed in.");
+        }
+
+        Map<String, Object> result = userService.updatePassword(
+                user.getId(),
+                body.get("originalPassword"),
+                body.get("newPassword"),
+                body.get("confirmPassword")
+        );
+
+        if (result == null || result.isEmpty()) {
+            return ApiResponse.ok();
+        }
+
+        String errorMsg = result.values().stream()
+                .filter(v -> v != null)
+                .map(Object::toString)
+                .findFirst()
+                .orElse("Failed to update password.");
+        return ApiResponse.error(400, errorMsg);
+    }
+
     private String uploadAvatarToPrimaryOrLocal(MultipartFile headerImage, String fileName) throws IOException {
         try {
             return objectStorageService.uploadHeader(
