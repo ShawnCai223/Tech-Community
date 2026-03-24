@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getLetters, getNotices, sendLetter } from '../api/messages';
 
 export default function MessagesPage() {
+  const POLL_INTERVAL_MS = 5000;
   const [tab, setTab] = useState<'letters' | 'notices'>('letters');
   const [letters, setLetters] = useState<any[]>([]);
   const [notices, setNotices] = useState<any>(null);
@@ -13,13 +14,53 @@ export default function MessagesPage() {
   const [sendError, setSendError] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setLoading(true);
-    if (tab === 'letters') {
-      getLetters().then((data) => setLetters(data.content)).catch(() => {}).finally(() => setLoading(false));
-    } else {
-      getNotices().then(setNotices).catch(() => {}).finally(() => setLoading(false));
+  const load = (silent = false) => {
+    if (!silent) {
+      setLoading(true);
     }
+    if (tab === 'letters') {
+      getLetters()
+        .then((data) => setLetters(data.content))
+        .catch(() => {})
+        .finally(() => {
+          if (!silent) {
+            setLoading(false);
+          }
+        });
+    } else {
+      getNotices()
+        .then(setNotices)
+        .catch(() => {})
+        .finally(() => {
+          if (!silent) {
+            setLoading(false);
+          }
+        });
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, [tab]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        load(true);
+      }
+    }, POLL_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        load(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [tab]);
 
   const handleSend = async () => {
@@ -30,7 +71,7 @@ export default function MessagesPage() {
         setShowCompose(false);
         setToName('');
         setContent('');
-        getLetters().then((data) => setLetters(data.content));
+        load(true);
       } else {
         setSendError(res.message);
       }

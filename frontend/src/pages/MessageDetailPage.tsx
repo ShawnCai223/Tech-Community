@@ -6,6 +6,7 @@ import { getUserProfile } from '../api/users';
 import type { User } from '../types/api';
 
 export default function MessageDetailPage() {
+  const POLL_INTERVAL_MS = 5000;
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user: currentUser } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
@@ -14,16 +15,44 @@ export default function MessageDetailPage() {
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
 
-  const load = () => {
+  const load = (silent = false) => {
     if (!conversationId) return;
-    setLoading(true);
+    if (!silent) {
+      setLoading(true);
+    }
     getLetterDetail(conversationId, 0, 100)
       .then((data) => setMessages([...data.content].reverse()))
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!silent) {
+          setLoading(false);
+        }
+      });
   };
 
   useEffect(load, [conversationId]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        load(true);
+      }
+    }, POLL_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        load(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     const node = chatListRef.current;
