@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getLetterDetail, sendLetter } from '../api/messages';
 import { useAuth } from '../contexts/AuthContext';
+import { getUserProfile } from '../api/users';
+import type { User } from '../types/api';
 
 export default function MessageDetailPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -9,6 +11,7 @@ export default function MessageDetailPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
+  const [otherUser, setOtherUser] = useState<User | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
 
   const load = () => {
@@ -28,11 +31,29 @@ export default function MessageDetailPage() {
     node.scrollTop = node.scrollHeight;
   }, [messages]);
 
-  const otherUser = messages.length > 0
-    ? messages[0].fromUser.id === currentUser?.id
-      ? null
-      : messages[0].fromUser
-    : null;
+  useEffect(() => {
+    const participant = messages.find((item: any) => item.fromUser.id !== currentUser?.id)?.fromUser ?? null;
+    if (participant) {
+      setOtherUser(participant);
+      return;
+    }
+
+    if (!conversationId || !currentUser) {
+      setOtherUser(null);
+      return;
+    }
+
+    const ids = conversationId.split('_').map(Number).filter((id) => !Number.isNaN(id));
+    const counterpartId = ids.find((id) => id !== currentUser.id);
+    if (!counterpartId) {
+      setOtherUser(null);
+      return;
+    }
+
+    getUserProfile(counterpartId)
+      .then((user) => setOtherUser(user))
+      .catch(() => setOtherUser(null));
+  }, [conversationId, currentUser, messages]);
 
   const handleSend = async () => {
     if (!reply.trim() || !otherUser) return;
