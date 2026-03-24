@@ -9,6 +9,7 @@ import com.shawnidea.community.service.ElasticsearchService;
 import com.shawnidea.community.service.MessageService;
 import com.shawnidea.community.service.ObjectStorageService;
 import com.shawnidea.community.util.AppConstants;
+import com.shawnidea.community.websocket.MessageWebSocketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -49,6 +50,9 @@ public class EventHandler implements AppConstants {
 
     @Autowired
     private ObjectStorageService objectStorageService;
+
+    @Autowired
+    private MessageWebSocketHandler messageWebSocketHandler;
 
     public void handleEvent(Event event) {
         if (event == null) {
@@ -97,6 +101,7 @@ public class EventHandler implements AppConstants {
 
         message.setContent(JSONObject.toJSONString(content));
         messageService.addMessage(message);
+        messageWebSocketHandler.sendNoticeCreated(event.getEntityUserId(), resolveNoticeCategory(event));
     }
 
     private void handlePublishEvent(Event event) {
@@ -191,5 +196,12 @@ public class EventHandler implements AppConstants {
                 logger.info("第{}次上传失败[{}].", uploadTimes, fileName);
             }
         }
+    }
+
+    private String resolveNoticeCategory(Event event) {
+        if (TOPIC_COMMENT.equals(event.getTopic())) {
+            return event.getEntityType() == ENTITY_TYPE_COMMENT ? "reply" : "comment";
+        }
+        return event.getTopic();
     }
 }

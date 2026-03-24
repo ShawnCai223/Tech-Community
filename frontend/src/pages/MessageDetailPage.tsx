@@ -4,11 +4,12 @@ import { getLetterDetail, sendLetter } from '../api/messages';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserProfile } from '../api/users';
 import type { User } from '../types/api';
+import { useNotifications } from '../contexts/NotificationContext';
 
 export default function MessageDetailPage() {
-  const POLL_INTERVAL_MS = 5000;
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user: currentUser } = useAuth();
+  const { refreshSummary } = useNotifications();
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
@@ -33,23 +34,24 @@ export default function MessageDetailPage() {
   useEffect(load, [conversationId]);
 
   useEffect(() => {
-    if (!conversationId) return;
-
-    const intervalId = window.setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        load(true);
-      }
-    }, POLL_INTERVAL_MS);
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+    const handleRealtime = (event: Event) => {
+      const payload = (event as CustomEvent).detail;
+      if (payload?.type === 'letter.created' && payload.data?.conversationId === conversationId) {
         load(true);
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        load(true);
+        refreshSummary();
+      }
+    };
+
+    window.addEventListener('community:ws-event', handleRealtime as EventListener);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
-      window.clearInterval(intervalId);
+      window.removeEventListener('community:ws-event', handleRealtime as EventListener);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [conversationId]);

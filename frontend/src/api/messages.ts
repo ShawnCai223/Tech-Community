@@ -1,5 +1,5 @@
 import client from './client';
-import type { ApiResponse, PageResponse } from '../types/api';
+import type { ApiResponse, MessageSummary, PageResponse } from '../types/api';
 
 export async function getLetters(page = 0, limit = 10) {
   const res = await client.get<ApiResponse<PageResponse<any>>>('/messages/letters', { params: { page, limit } });
@@ -23,5 +23,10 @@ export async function getNotices() {
 
 export async function getNoticeDetail(topic: string, page = 0, limit = 10) {
   const res = await client.get<ApiResponse<PageResponse<any>>>(`/messages/notices/${topic}`, { params: { page, limit } });
+  return res.data.data;
+}
+
+export async function getMessageSummary() {
+  const res = await client.get<ApiResponse<MessageSummary>>('/messages/summary');
   return res.data.data;
 }

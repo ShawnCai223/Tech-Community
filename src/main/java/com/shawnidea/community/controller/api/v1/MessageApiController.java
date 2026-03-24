@@ -9,6 +9,7 @@ import com.shawnidea.community.service.MessageService;
 import com.shawnidea.community.service.UserService;
 import com.shawnidea.community.util.AppConstants;
 import com.shawnidea.community.util.HostHolder;
+import com.shawnidea.community.websocket.MessageWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,9 @@ public class MessageApiController implements AppConstants {
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Autowired
+    private MessageWebSocketHandler messageWebSocketHandler;
 
     @GetMapping("/letters")
     public ApiResponse<PageResponse<Map<String, Object>>> letterList(
@@ -72,6 +76,7 @@ public class MessageApiController implements AppConstants {
         }
         if (!unreadIds.isEmpty()) {
             messageService.readMessage(unreadIds);
+            messageWebSocketHandler.sendSummaryUpdate(user.getId());
         }
 
         List<Map<String, Object>> list = new ArrayList<>();
@@ -108,7 +113,15 @@ public class MessageApiController implements AppConstants {
         message.setCreateTime(new Date());
         messageService.addMessage(message);
 
+        messageWebSocketHandler.sendLetterCreated(target.getId(), message, user);
+
         return ApiResponse.ok();
+    }
+
+    @GetMapping("/summary")
+    public ApiResponse<Map<String, Integer>> summary() {
+        User user = hostHolder.getUser();
+        return ApiResponse.ok(messageService.buildUnreadSummary(user.getId()));
     }
 
     @GetMapping("/notices")
@@ -160,6 +173,7 @@ public class MessageApiController implements AppConstants {
         }
         if (!unreadIds.isEmpty()) {
             messageService.readMessage(unreadIds);
+            messageWebSocketHandler.sendSummaryUpdate(user.getId());
         }
 
         int totalPages = (totalRows + limit - 1) / limit;

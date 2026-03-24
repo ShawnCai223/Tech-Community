@@ -7,7 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static com.shawnidea.community.util.AppConstants.ENTITY_TYPE_COMMENT;
+import static com.shawnidea.community.util.AppConstants.ENTITY_TYPE_POST;
+import static com.shawnidea.community.util.AppConstants.TOPIC_COMMENT;
+import static com.shawnidea.community.util.AppConstants.TOPIC_FOLLOW;
+import static com.shawnidea.community.util.AppConstants.TOPIC_LIKE;
 
 @Service
 public class MessageService {
@@ -60,8 +68,30 @@ public class MessageService {
         return messageMapper.selectNoticeUnreadCount(userId, topic);
     }
 
+    public int findNoticeUnreadCountByEntityType(int userId, String topic, int entityType) {
+        return messageMapper.selectNoticeUnreadCountByEntityType(userId, topic, entityType);
+    }
+
     public List<Message> findNotices(int userId, String topic, int offset, int limit) {
         return messageMapper.selectNotices(userId, topic, offset, limit);
+    }
+
+    public Map<String, Integer> buildUnreadSummary(int userId) {
+        int directMessageUnreadCount = findLetterUnreadCount(userId, null);
+        int likeUnreadCount = findNoticeUnreadCount(userId, TOPIC_LIKE);
+        int commentUnreadCount = findNoticeUnreadCountByEntityType(userId, TOPIC_COMMENT, ENTITY_TYPE_POST);
+        int replyUnreadCount = findNoticeUnreadCountByEntityType(userId, TOPIC_COMMENT, ENTITY_TYPE_COMMENT);
+        int followUnreadCount = findNoticeUnreadCount(userId, TOPIC_FOLLOW);
+
+        Map<String, Integer> summary = new HashMap<>();
+        summary.put("directMessageUnreadCount", directMessageUnreadCount);
+        summary.put("likeUnreadCount", likeUnreadCount);
+        summary.put("commentUnreadCount", commentUnreadCount);
+        summary.put("replyUnreadCount", replyUnreadCount);
+        summary.put("followUnreadCount", followUnreadCount);
+        summary.put("noticeUnreadCount", likeUnreadCount + commentUnreadCount + replyUnreadCount);
+        summary.put("totalUnreadCount", directMessageUnreadCount + likeUnreadCount + commentUnreadCount + replyUnreadCount);
+        return summary;
     }
 
 }

@@ -1,9 +1,11 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 export default function Layout() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { summary } = useNotifications();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -45,7 +47,12 @@ export default function Layout() {
             <nav className="nav-links">
               {isAuthenticated ? (
                 <>
-                  <Link to="/community/app/messages" className="nav-link">Messages</Link>
+                  <Link to="/community/app/messages" className="nav-link nav-link-with-badge">
+                    <span>Messages</span>
+                    {summary.totalUnreadCount > 0 && (
+                      <span className="nav-unread-badge">{summary.totalUnreadCount}</span>
+                    )}
+                  </Link>
                   <Link to={`/community/app/profile/${user?.id}`} className="nav-user">
                     <img src={user?.headerUrl} alt={`${user?.username}'s avatar`} className="nav-user-avatar" />
                     <span className="nav-username">{user?.username}</span>

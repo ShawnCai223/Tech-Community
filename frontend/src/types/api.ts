@@ -54,3 +54,13 @@ export interface AuthTokens {
   refreshToken: string;
   user: User;
 }
+
+export interface MessageSummary {
+  directMessageUnreadCount: number;
+  likeUnreadCount: number;
+  commentUnreadCount: number;
+  replyUnreadCount: number;
+  followUnreadCount: number;
+  noticeUnreadCount: number;
+  totalUnreadCount: number;
+}

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLetters, getNotices, sendLetter } from '../api/messages';
+import { useNotifications } from '../contexts/NotificationContext';
 
 export default function MessagesPage() {
-  const POLL_INTERVAL_MS = 5000;
   const [tab, setTab] = useState<'letters' | 'notices'>('letters');
   const [letters, setLetters] = useState<any[]>([]);
   const [notices, setNotices] = useState<any>(null);
@@ -12,6 +12,7 @@ export default function MessagesPage() {
   const [toName, setToName] = useState('');
   const [content, setContent] = useState('');
   const [sendError, setSendError] = useState('');
+  const { summary, refreshSummary } = useNotifications();
   const navigate = useNavigate();
 
   const load = (silent = false) => {
@@ -44,21 +45,26 @@ export default function MessagesPage() {
   }, [tab]);
 
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      if (document.visibilityState === 'visible') {
+    const handleRealtime = (event: Event) => {
+      const payload = (event as CustomEvent).detail;
+      if (payload?.type === 'letter.created' && tab === 'letters') {
         load(true);
-      }
-    }, POLL_INTERVAL_MS);
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      } else if (payload?.type === 'notice.created' && tab === 'notices') {
         load(true);
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        load(true);
+        refreshSummary();
+      }
+    };
+
+    window.addEventListener('community:ws-event', handleRealtime as EventListener);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
-      window.clearInterval(intervalId);
+      window.removeEventListener('community:ws-event', handleRealtime as EventListener);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [tab]);
@@ -82,6 +88,25 @@ export default function MessagesPage() {
 
   return (
     <div>
+      <div className="message-summary-grid">
+        <button className="message-summary-card" onClick={() => setTab('letters')} type="button">
+          <span className="message-summary-label">Direct Messages</span>
+          <span className="message-summary-value">{summary.directMessageUnreadCount}</span>
+        </button>
+        <button className="message-summary-card" onClick={() => setTab('notices')} type="button">
+          <span className="message-summary-label">Likes</span>
+          <span className="message-summary-value">{summary.likeUnreadCount}</span>
+        </button>
+        <button className="message-summary-card" onClick={() => setTab('notices')} type="button">
+          <span className="message-summary-label">Comments</span>
+          <span className="message-summary-value">{summary.commentUnreadCount}</span>
+        </button>
+        <button className="message-summary-card" onClick={() => setTab('notices')} type="button">
+          <span className="message-summary-label">Replies</span>
+          <span className="message-summary-value">{summary.replyUnreadCount}</span>
+        </button>
+      </div>
+
       <div className="section-heading">
         <h2>Messages</h2>
         {tab === 'letters' && (
