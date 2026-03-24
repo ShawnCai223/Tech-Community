@@ -3,6 +3,10 @@ HELP.md
 !.mvn/wrapper/maven-wrapper.jar
 .DS_Store
 **/.DS_Store
+.claude/
+.claude_cache/
+.claude_logs/
+.claude_temp/
 
 # Local runtime artifacts
 /data/logs/
