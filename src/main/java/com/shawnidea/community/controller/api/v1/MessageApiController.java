@@ -12,6 +12,7 @@ import com.shawnidea.community.util.HostHolder;
 import com.shawnidea.community.websocket.MessageWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.*;
 
@@ -157,7 +158,7 @@ public class MessageApiController implements AppConstants {
         for (Message notice : notices) {
             Map<String, Object> vo = new HashMap<>();
             vo.put("notice", notice);
-            Map<String, Object> content = JSONObject.parseObject(notice.getContent(), HashMap.class);
+            Map<String, Object> content = parseNoticeContent(notice);
             vo.put("user", userService.findUserById((Integer) content.get("userId")));
             vo.put("entityType", content.get("entityType"));
             vo.put("entityId", content.get("entityId"));
@@ -189,7 +190,7 @@ public class MessageApiController implements AppConstants {
         Message latest = messageService.findLatestNotice(userId, topic);
         if (latest != null) {
             info.put("message", latest);
-            Map<String, Object> content = JSONObject.parseObject(latest.getContent(), HashMap.class);
+            Map<String, Object> content = parseNoticeContent(latest);
             info.put("user", userService.findUserById((Integer) content.get("userId")));
             info.put("entityType", content.get("entityType"));
             info.put("entityId", content.get("entityId"));
@@ -197,6 +198,10 @@ public class MessageApiController implements AppConstants {
             info.put("unread", messageService.findNoticeUnreadCount(userId, topic));
         }
         return info;
+    }
+
+    private Map<String, Object> parseNoticeContent(Message notice) {
+        return JSONObject.parseObject(HtmlUtils.htmlUnescape(notice.getContent()), HashMap.class);
     }
 
 }
