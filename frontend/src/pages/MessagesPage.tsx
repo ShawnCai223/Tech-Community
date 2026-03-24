@@ -135,10 +135,7 @@ export default function MessagesPage() {
   return (
     <div>
       <div className="section-heading">
-        <h2>
-          Messages
-          {summary.totalUnreadCount > 0 && <span className="unread-dot" />}
-        </h2>
+        <h2>Messages</h2>
         {view === 'letters' && (
           <button className="btn btn-primary btn-sm" onClick={() => setShowCompose(!showCompose)}>
             New Message
@@ -195,12 +192,14 @@ export default function MessagesPage() {
             <div key={item.conversation.id} className="message-item" onClick={() => navigate(`/community/app/messages/${item.conversation.conversationId}`)}>
               <img src={item.target.headerUrl} alt={item.target.username} className="message-avatar" />
               <div className="message-body">
-                <div className="message-title">{item.target.username}</div>
+                <div className="message-title">
+                  {item.target.username}
+                  {item.unreadCount > 0 && <span className="unread-dot" />}
+                </div>
                 <div className="message-preview">{item.conversation.content}</div>
               </div>
               <div className="message-meta">
                 <div>{new Date(item.conversation.createTime).toLocaleDateString()}</div>
-                {item.unreadCount > 0 && <span className="message-badge">{item.unreadCount}</span>}
               </div>
             </div>
           ))
@@ -218,8 +217,8 @@ export default function MessagesPage() {
               >
                 <div className="message-body">
                   <div className="message-title">
-                    {item.notice.status === 0 && <span className="unread-star">*</span>}
                     {item.user?.username}
+                    {item.notice.status === 0 && <span className="unread-dot" />}
                   </div>
                   <div className="message-preview">
                     {view === 'like'
