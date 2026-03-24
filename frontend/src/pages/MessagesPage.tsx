@@ -59,6 +59,22 @@ export default function MessagesPage() {
     return `/community/app/post/${item.postId}${threadId ? `#thread-${threadId}` : ''}`;
   };
 
+  const getViewLabel = () => {
+    if (view === 'letters') {
+      return 'Direct Messages';
+    }
+    if (view === 'like') {
+      return 'Likes';
+    }
+    if (view === 'comment') {
+      return 'Comments';
+    }
+    if (view === 'reply') {
+      return 'Replies';
+    }
+    return 'Followers';
+  };
+
   const load = useCallback((silent = false) => {
     if (!silent) {
       setLoading(true);
@@ -96,7 +112,12 @@ export default function MessagesPage() {
         refreshSummary();
       } catch { /* ignore */ }
     }
-    navigate(getNoticeTarget(item));
+    navigate(getNoticeTarget(item), {
+      state: {
+        backTo: view === 'letters' ? '/community/app/messages' : `/community/app/messages?view=${view}`,
+        backLabel: `Back to ${getViewLabel()}`,
+      },
+    });
   };
 
   useEffect(() => {

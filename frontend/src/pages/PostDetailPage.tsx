@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { getPostDetail } from '../api/posts';
 import { toggleLike } from '../api/likes';
 import { addComment } from '../api/comments';
@@ -10,6 +10,7 @@ import MarkdownEditor from '../components/MarkdownEditor';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { user: currentUser, isAuthenticated } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -98,10 +99,12 @@ export default function PostDetailPage() {
   if (!data) return <div className="empty-state"><div className="empty-state-text">Post not found.</div></div>;
 
   const { post, user, likeCount, likeStatus, comments } = data;
+  const backTo = location.state?.backTo ?? '/community/app';
+  const backLabel = location.state?.backLabel ?? 'Back to posts';
 
   return (
     <div>
-      <Link to="/community/app" className="page-backlink">&larr; Back to posts</Link>
+      <Link to={backTo} className="page-backlink">&larr; {backLabel}</Link>
 
       <div className="detail-header">
         <h1 className="detail-title">

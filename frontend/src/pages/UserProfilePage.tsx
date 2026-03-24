@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { getUserProfile } from '../api/users';
 import { follow, unfollow } from '../api/follows';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -36,9 +37,15 @@ export default function UserProfilePage() {
   if (!profile) return <div className="empty-state"><div className="empty-state-text">User not found.</div></div>;
 
   const isMe = currentUser?.id === profile.id;
+  const backTo = location.state?.backTo;
+  const backLabel = location.state?.backLabel ?? 'Back to messages';
 
   return (
     <div>
+      {backTo && (
+        <Link to={backTo} className="page-backlink">&larr; {backLabel}</Link>
+      )}
+
       <div className="profile-hero">
         <img src={profile.headerUrl} alt={`${profile.username}'s avatar`} className="profile-avatar" />
         <div className="profile-info">
