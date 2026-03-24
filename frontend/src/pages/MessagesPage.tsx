@@ -1,11 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getLetters, getNoticeDetail, sendLetter, markNoticeRead } from '../api/messages';
 import { useNotifications } from '../contexts/NotificationContext';
 
+type MessageView = 'letters' | 'like' | 'comment' | 'reply' | 'follow';
+
+const VALID_VIEWS: MessageView[] = ['letters', 'like', 'comment', 'reply', 'follow'];
+
 export default function MessagesPage() {
   const FALLBACK_REFRESH_MS = 5000;
-  const [view, setView] = useState<'letters' | 'like' | 'comment' | 'reply' | 'follow'>('letters');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialView = searchParams.get('view');
+  const [view, setView] = useState<MessageView>(
+    VALID_VIEWS.includes(initialView as MessageView) ? (initialView as MessageView) : 'letters',
+  );
   const [letters, setLetters] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +23,17 @@ export default function MessagesPage() {
   const [sendError, setSendError] = useState('');
   const { summary, refreshSummary } = useNotifications();
   const navigate = useNavigate();
+
+  const setCurrentView = (nextView: MessageView) => {
+    setView(nextView);
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextView === 'letters') {
+      nextParams.delete('view');
+    } else {
+      nextParams.set('view', nextView);
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const getNoticeQuery = () => {
     if (view === 'comment') {
@@ -81,6 +100,16 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
+    const queryView = searchParams.get('view');
+    const nextView = VALID_VIEWS.includes(queryView as MessageView)
+      ? (queryView as MessageView)
+      : 'letters';
+    if (nextView !== view) {
+      setView(nextView);
+    }
+  }, [searchParams, view]);
+
+  useEffect(() => {
     load();
   }, [view]);
 
@@ -144,23 +173,23 @@ export default function MessagesPage() {
       </div>
 
       <div className="message-tabs">
-        <button className={`message-tab${view === 'letters' ? ' active' : ''}`} onClick={() => setView('letters')} type="button">
+        <button className={`message-tab${view === 'letters' ? ' active' : ''}`} onClick={() => setCurrentView('letters')} type="button">
           Direct Messages
           {summary.directMessageUnreadCount > 0 && <span className="unread-dot" />}
         </button>
-        <button className={`message-tab${view === 'like' ? ' active' : ''}`} onClick={() => setView('like')} type="button">
+        <button className={`message-tab${view === 'like' ? ' active' : ''}`} onClick={() => setCurrentView('like')} type="button">
           Likes
           {summary.likeUnreadCount > 0 && <span className="unread-dot" />}
         </button>
-        <button className={`message-tab${view === 'comment' ? ' active' : ''}`} onClick={() => setView('comment')} type="button">
+        <button className={`message-tab${view === 'comment' ? ' active' : ''}`} onClick={() => setCurrentView('comment')} type="button">
           Comments
           {summary.commentUnreadCount > 0 && <span className="unread-dot" />}
         </button>
-        <button className={`message-tab${view === 'reply' ? ' active' : ''}`} onClick={() => setView('reply')} type="button">
+        <button className={`message-tab${view === 'reply' ? ' active' : ''}`} onClick={() => setCurrentView('reply')} type="button">
           Replies
           {summary.replyUnreadCount > 0 && <span className="unread-dot" />}
         </button>
-        <button className={`message-tab${view === 'follow' ? ' active' : ''}`} onClick={() => setView('follow')} type="button">
+        <button className={`message-tab${view === 'follow' ? ' active' : ''}`} onClick={() => setCurrentView('follow')} type="button">
           Followers
           {summary.followUnreadCount > 0 && <span className="unread-dot" />}
         </button>
