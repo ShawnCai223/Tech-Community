@@ -9,17 +9,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 import org.springframework.scheduling.quartz.SimpleTriggerFactoryBean;
 
-// 配置 -> 数据库 -> 调用
+// Quartz job configuration.
 @Configuration
 public class QuartzConfig {
 
-    // FactoryBean可简化Bean的实例化过程:
-    // 1.通过FactoryBean封装Bean的实例化过程.
-    // 2.将FactoryBean装配到Spring容器里.
-    // 3.将FactoryBean注入给其他的Bean.
-    // 4.该Bean得到的是FactoryBean所管理的对象实例.
+    // FactoryBean simplifies bean creation and wiring:
+    // 1. It encapsulates the instantiation process.
+    // 2. It is registered with the Spring container.
+    // 3. Other beans inject the managed object.
+    // 4. Consumers receive the object managed by the FactoryBean.
 
-    // 配置JobDetail
+    // Configure JobDetail.
     // @Bean
     public JobDetailFactoryBean alphaJobDetail() {
         JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
@@ -31,7 +31,7 @@ public class QuartzConfig {
         return factoryBean;
     }
 
-    // 配置Trigger(SimpleTriggerFactoryBean, CronTriggerFactoryBean)
+    // Configure Trigger(SimpleTriggerFactoryBean, CronTriggerFactoryBean).
     // @Bean
     public SimpleTriggerFactoryBean alphaTrigger(JobDetail alphaJobDetail) {
         SimpleTriggerFactoryBean factoryBean = new SimpleTriggerFactoryBean();
@@ -43,7 +43,7 @@ public class QuartzConfig {
         return factoryBean;
     }
 
-    // 刷新帖子分数任务
+    // Post score refresh job.
     @Bean
     public JobDetailFactoryBean postScoreRefreshJobDetail() {
         JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();

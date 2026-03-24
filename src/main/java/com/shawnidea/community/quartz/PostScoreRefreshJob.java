@@ -23,7 +23,7 @@ import java.util.Date;
 public class PostScoreRefreshJob implements Job, AppConstants {
 
     private static final Logger logger = LoggerFactory.getLogger(PostScoreRefreshJob.class);
-    private static final double RECENCY_SCALE_DAYS = 45.0;
+    private static final long MILLIS_PER_DAY = 1000L * 3600 * 24;
 
     @Autowired
     private RedisTemplate redisTemplate;
@@ -37,14 +37,14 @@ public class PostScoreRefreshJob implements Job, AppConstants {
     @Autowired
     private ObjectProvider<ElasticsearchService> elasticsearchServiceProvider;
 
-    // Score epoch baseline
-    private static final Date epoch;
+    // Score baseline date
+    private static final Date baselineDate;
 
     static {
         try {
-            epoch = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2014-08-01 00:00:00");
+            baselineDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2025-07-01 00:00:00");
         } catch (ParseException e) {
-            throw new RuntimeException("Failed to initialize score epoch baseline!", e);
+            throw new RuntimeException("Failed to initialize score baseline date!", e);
         }
     }
 
@@ -54,44 +54,48 @@ public class PostScoreRefreshJob implements Job, AppConstants {
         BoundSetOperations operations = redisTemplate.boundSetOps(redisKey);
 
         if (operations.size() == 0) {
-            logger.info("[任务取消] 没有需要刷新的帖子!");
+            logger.info("[Skip] No posts require score refresh.");
             return;
         }
 
-        logger.info("[任务开始] 正在刷新帖子分数: " + operations.size());
+        logger.info("[Start] Refreshing scores for {} posts.", operations.size());
         while (operations.size() > 0) {
             this.refresh((Integer) operations.pop());
         }
-        logger.info("[任务结束] 帖子分数刷新完毕!");
+        logger.info("[Done] Post score refresh completed.");
     }
 
     private void refresh(int postId) {
         DiscussPost post = discussPostService.findDiscussPostById(postId);
 
         if (post == null) {
-            logger.error("该帖子不存在: id = " + postId);
+            logger.error("Post does not exist: id={}", postId);
             return;
         }
 
-        // 是否精华
+        // Highlighted posts receive an additional boost.
         boolean wonderful = post.getStatus() == 1;
-        // 评论数量
+        // Comment count increases the ranking weight.
         int commentCount = post.getCommentCount();
-        // 点赞数量
+        // Like count contributes a smaller boost than comments.
         long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, postId);
 
-        // 计算权重
+        // Base engagement weight.
         double w = (wonderful ? 75 : 0) + commentCount * 10 + likeCount * 2;
-        // 分数 = 帖子权重 + 折算后的时间衰减.
-        // 时间项如果过重, 新发但零互动的帖子会长期压过已有互动的内容.
-        double score = Math.log10(Math.max(w, 1))
-                + (post.getCreateTime().getTime() - epoch.getTime()) / (1000.0 * 3600 * 24 * RECENCY_SCALE_DAYS);
-        // 更新帖子分数
+        // Time factor = days since 2025-07-01 divided by the days from 2025-07-01 to today.
+        // This keeps recency bounded relative to the current date instead of growing indefinitely.
+        double elapsedDaysSinceBaseline = (post.getCreateTime().getTime() - baselineDate.getTime()) / (double) MILLIS_PER_DAY;
+        double daysFromBaselineToToday = Math.max(
+                1.0,
+                (System.currentTimeMillis() - baselineDate.getTime()) / (double) MILLIS_PER_DAY
+        );
+        double score = Math.log10(Math.max(w, 1)) + elapsedDaysSinceBaseline / daysFromBaselineToToday;
+        // Persist the refreshed score.
         discussPostService.updateScore(postId, score);
 
         ElasticsearchService elasticsearchService = elasticsearchServiceProvider.getIfAvailable();
         if (elasticsearchService != null) {
-            // 同步搜索数据
+            // Keep the search index aligned with the latest score.
             post.setScore(score);
             elasticsearchService.saveDiscussPost(post);
         }

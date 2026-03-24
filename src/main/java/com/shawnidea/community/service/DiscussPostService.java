@@ -36,17 +36,17 @@ public class DiscussPostService {
     @Value("${caffeine.posts.expire-seconds}")
     private int expireSeconds;
 
-    // Caffeine核心接口: Cache, LoadingCache, AsyncLoadingCache
+    // Core Caffeine cache abstractions: Cache, LoadingCache, AsyncLoadingCache.
 
-    // 帖子列表缓存
+    // Cached home-page post lists.
     private LoadingCache<String, List<DiscussPost>> postListCache;
 
-    // 帖子总数缓存
+    // Cached total post count.
     private LoadingCache<Integer, Integer> postRowsCache;
 
     @PostConstruct
     public void init() {
-        // 初始化帖子列表缓存
+        // Initialize the post-list cache.
         postListCache = Caffeine.newBuilder()
                 .maximumSize(maxSize)
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
@@ -66,13 +66,13 @@ public class DiscussPostService {
                         int offset = Integer.valueOf(params[0]);
                         int limit = Integer.valueOf(params[1]);
 
-                        // 二级缓存: Redis -> mysql
+                        // The hot-list cache ultimately falls back to MySQL.
 
                         logger.debug("load post list from DB.");
                         return discussPostMapper.selectDiscussPosts(0, offset, limit, 1);
                     }
                 });
-        // 初始化帖子总数缓存
+        // Initialize the post-count cache.
         postRowsCache = Caffeine.newBuilder()
                 .maximumSize(maxSize)
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
@@ -109,10 +109,10 @@ public class DiscussPostService {
             throw new IllegalArgumentException("Parameters cannot be empty!");
         }
 
-        // 转义HTML标记
+        // Escape raw HTML.
         post.setTitle(HtmlUtils.htmlEscape(post.getTitle()));
         post.setContent(HtmlUtils.htmlEscape(post.getContent()));
-        // 过滤敏感词
+        // Filter sensitive words.
         post.setTitle(sensitiveFilter.filter(post.getTitle()));
         post.setContent(sensitiveFilter.filter(post.getContent()));
         int rows = discussPostMapper.insertDiscussPost(post);
