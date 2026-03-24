@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getLetterDetail, sendLetter } from '../api/messages';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,17 +9,24 @@ export default function MessageDetailPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
+  const chatListRef = useRef<HTMLDivElement>(null);
 
   const load = () => {
     if (!conversationId) return;
     setLoading(true);
     getLetterDetail(conversationId, 0, 100)
-      .then((data) => setMessages(data.content))
+      .then((data) => setMessages([...data.content].reverse()))
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
   useEffect(load, [conversationId]);
+
+  useEffect(() => {
+    const node = chatListRef.current;
+    if (!node) return;
+    node.scrollTop = node.scrollHeight;
+  }, [messages]);
 
   const otherUser = messages.length > 0
     ? messages[0].fromUser.id === currentUser?.id
@@ -42,7 +49,7 @@ export default function MessageDetailPage() {
     <div>
       <Link to="/community/app/messages" className="page-backlink">&larr; Back to messages</Link>
 
-      <div className="chat-list">
+      <div ref={chatListRef} className="chat-list">
         {messages.map((item: any) => {
           const isSent = item.fromUser.id === currentUser?.id;
           return (

@@ -758,6 +758,9 @@ textarea { font-family: inherit; }
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .chat-compose {
