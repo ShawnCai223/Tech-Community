@@ -13,6 +13,7 @@ export default function MessageDetailPage() {
   const { refreshSummary } = useNotifications();
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const [reply, setReply] = useState('');
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
@@ -95,11 +96,29 @@ export default function MessageDetailPage() {
 
   const handleSend = async () => {
     if (!reply.trim() || !otherUser) return;
+    const content = reply.trim();
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage = {
+      letter: {
+        id: tempId,
+        content,
+        createTime: new Date().toISOString(),
+      },
+      fromUser: currentUser,
+    };
+
     try {
-      await sendLetter(otherUser.username, reply);
+      setSending(true);
       setReply('');
-      load();
-    } catch {}
+      setMessages((current) => [...current, optimisticMessage]);
+      await sendLetter(otherUser.username, content);
+      load(true);
+    } catch {
+      setMessages((current) => current.filter((item: any) => item.letter.id !== tempId));
+      setReply(content);
+    } finally {
+      setSending(false);
+    }
   };
 
   if (loading) return <div className="loading">Loading...</div>;
@@ -132,7 +151,9 @@ export default function MessageDetailPage() {
             value={reply}
             onChange={(e) => setReply(e.target.value)}
           />
-          <button className="btn btn-primary" onClick={handleSend} style={{ alignSelf: 'flex-end' }}>Send</button>
+          <button className="btn btn-primary" onClick={handleSend} style={{ alignSelf: 'flex-end' }} disabled={sending || !reply.trim()}>
+            {sending ? 'Sending...' : 'Send'}
+          </button>
         </div>
       )}
     </div>
