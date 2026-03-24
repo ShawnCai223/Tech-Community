@@ -59,17 +59,18 @@ public class DiscussPostService {
                         }
 
                         String[] params = key.split(":");
-                        if (params == null || params.length != 2) {
+                        if (params == null || params.length != 3) {
                             throw new IllegalArgumentException("Invalid parameters!");
                         }
 
-                        int offset = Integer.valueOf(params[0]);
-                        int limit = Integer.valueOf(params[1]);
+                        int orderMode = Integer.parseInt(params[0]);
+                        int offset = Integer.parseInt(params[1]);
+                        int limit = Integer.parseInt(params[2]);
 
-                        // The hot-list cache ultimately falls back to MySQL.
+                        // Cache both "latest" and "hot" home feeds to reduce DB bursts on the default page.
 
                         logger.debug("load post list from DB.");
-                        return discussPostMapper.selectDiscussPosts(0, offset, limit, 1);
+                        return discussPostMapper.selectDiscussPosts(0, offset, limit, orderMode);
                     }
                 });
         // Initialize the post-count cache.
@@ -87,8 +88,8 @@ public class DiscussPostService {
     }
 
     public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit, int orderMode) {
-        if (userId == 0 && orderMode == 1) {
-            return postListCache.get(offset + ":" + limit);
+        if (userId == 0 && (orderMode == 0 || orderMode == 1)) {
+            return postListCache.get(orderMode + ":" + offset + ":" + limit);
         }
 
         logger.debug("load post list from DB.");
