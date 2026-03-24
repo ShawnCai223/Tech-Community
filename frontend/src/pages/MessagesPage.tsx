@@ -134,46 +134,39 @@ export default function MessagesPage() {
 
   return (
     <div>
-      <div className="message-summary-grid">
-        <button className="message-summary-card" onClick={() => setView('letters')} type="button">
-          <span className="message-summary-label">Direct Messages</span>
-          <span className="message-summary-value">{summary.directMessageUnreadCount}</span>
-        </button>
-        <button className="message-summary-card" onClick={() => setView('like')} type="button">
-          <span className="message-summary-label">Likes</span>
-          <span className="message-summary-value">{summary.likeUnreadCount}</span>
-        </button>
-        <button className="message-summary-card" onClick={() => setView('comment')} type="button">
-          <span className="message-summary-label">Comments</span>
-          <span className="message-summary-value">{summary.commentUnreadCount}</span>
-        </button>
-        <button className="message-summary-card" onClick={() => setView('reply')} type="button">
-          <span className="message-summary-label">Replies</span>
-          <span className="message-summary-value">{summary.replyUnreadCount}</span>
-        </button>
-        <button className="message-summary-card" onClick={() => setView('follow')} type="button">
-          <span className="message-summary-label">New Followers</span>
-          <span className="message-summary-value">{summary.followUnreadCount}</span>
-        </button>
-      </div>
-
       <div className="section-heading">
         <h2>
-          {view === 'letters'
-            ? 'Messages'
-            : view === 'like'
-              ? 'Likes'
-              : view === 'comment'
-                ? 'Comments'
-                : view === 'reply'
-                  ? 'Replies'
-                  : 'New Followers'}
+          Messages
+          {summary.totalUnreadCount > 0 && <span className="unread-dot" />}
         </h2>
         {view === 'letters' && (
           <button className="btn btn-primary btn-sm" onClick={() => setShowCompose(!showCompose)}>
             New Message
           </button>
         )}
+      </div>
+
+      <div className="message-tabs">
+        <button className={`message-tab${view === 'letters' ? ' active' : ''}`} onClick={() => setView('letters')} type="button">
+          Direct Messages
+          {summary.directMessageUnreadCount > 0 && <span className="unread-dot" />}
+        </button>
+        <button className={`message-tab${view === 'like' ? ' active' : ''}`} onClick={() => setView('like')} type="button">
+          Likes
+          {summary.likeUnreadCount > 0 && <span className="unread-dot" />}
+        </button>
+        <button className={`message-tab${view === 'comment' ? ' active' : ''}`} onClick={() => setView('comment')} type="button">
+          Comments
+          {summary.commentUnreadCount > 0 && <span className="unread-dot" />}
+        </button>
+        <button className={`message-tab${view === 'reply' ? ' active' : ''}`} onClick={() => setView('reply')} type="button">
+          Replies
+          {summary.replyUnreadCount > 0 && <span className="unread-dot" />}
+        </button>
+        <button className={`message-tab${view === 'follow' ? ' active' : ''}`} onClick={() => setView('follow')} type="button">
+          Followers
+          {summary.followUnreadCount > 0 && <span className="unread-dot" />}
+        </button>
       </div>
 
       {showCompose && (

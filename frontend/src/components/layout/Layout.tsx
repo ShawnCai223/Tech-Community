@@ -50,7 +50,7 @@ export default function Layout() {
                   <Link to="/community/app/messages" className="nav-link nav-link-with-badge">
                     <span>Messages</span>
                     {summary.totalUnreadCount > 0 && (
-                      <span className="nav-unread-badge">{summary.totalUnreadCount}</span>
+                      <span className="unread-dot" />
                     )}
                   </Link>
                   <Link to={`/community/app/profile/${user?.id}`} className="nav-user">
